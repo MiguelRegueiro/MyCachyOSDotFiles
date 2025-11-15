@@ -4,6 +4,7 @@ This repository contains my personal dotfiles and configuration files for CachyO
 
 ## Table of Contents
 - [Keyboard RGB Setup](#keyboard-rgb-setup)
+- [Virtualization Setup](#virtualization-setup)
 
 ## Keyboard RGB Setup
 
@@ -71,6 +72,7 @@ To control the RGB zones:
 - Zone 3: `sudo bash -c 'echo RRGGBB > /sys/devices/platform/hp-wmi/rgb_zones/zone03'`
 
 Examples:
+- This color is the one I chose (3835ff): `sudo bash -c 'echo 3835ff > /sys/devices/platform/hp-wmi/rgb_zones/zone00'`
 - Blue: `sudo bash -c 'echo 0000FF > /sys/devices/platform/hp-wmi/rgb_zones/zone00'`
 - Red: `sudo bash -c 'echo FF0000 > /sys/devices/platform/hp-wmi/rgb_zones/zone00'`
 - Cyan: `sudo bash -c 'echo 00FFFF > /sys/devices/platform/hp-wmi/rgb_zones/zone00'`
@@ -87,5 +89,53 @@ Examples:
 - Verify module loaded: `lsmod | grep hp_wmi`
 
 DKMS automatically manages rebuilding the module on kernel updates, so this setup should continue working after kernel updates.
+
+#### Automation:
+I've included a script `set_omen_colors.sh` that automatically sets all keyboard zones to the color I chose (3835ff) after system startup. You can run it manually or set it up to run automatically at boot.
+
+</details>
+
+## Virtualization Setup
+
+<details>
+<summary>Click here to expand and see details about virtualization setup</summary>
+
+### Virtualization Setup for CachyOS
+
+#### Installation:
+Install the required virtualization packages:
+```bash
+sudo pacman -S qemu-full virt-manager virt-viewer dnsmasq bridge-utils libguestfs ebtables vde2 openbsd-netcat
+```
+
+#### Initial Setup:
+1. Start the libvirt daemon:
+   ```bash
+   sudo systemctl start libvirtd
+   ```
+
+2. Verify the service is running:
+   ```bash
+   systemctl status libvirtd
+   ```
+
+3. Add your user to the required groups for virtualization:
+   ```bash
+   sudo usermod -aG libvirt libvirt-qemu kvm qemu $USER
+   ```
+   Note: You'll need to log out and log back in for the group changes to take effect.
+
+4. Start and enable iptables service (required for some network configurations):
+   ```bash
+   sudo systemctl start iptables.service
+   sudo systemctl enable iptables.service
+   ```
+
+5. Restart the libvirtd service to apply all changes:
+   ```bash
+   sudo systemctl restart libvirtd.service
+   ```
+
+Once these steps are completed, you can use Virt-Manager to create and manage virtual machines with full hardware acceleration support.
 
 </details>
