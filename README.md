@@ -5,6 +5,7 @@ This repository contains my personal dotfiles and configuration files for CachyO
 ## Table of Contents
 - [Virtualization Setup](#virtualization-setup)
 - [Keyboard RGB Setup](#keyboard-rgb-setup)
+- [Japanese Keyboard Layout](#japanese-keyboard-layout)
 
 ## Virtualization Setup
 
@@ -137,5 +138,48 @@ DKMS automatically manages rebuilding the module on kernel updates, so this setu
 
 #### Automation:
 I've included a script `set_omen_colors.sh` that automatically sets all keyboard zones to the color I chose (3835ff) after system startup. You can run it manually or set it up to run automatically at boot.
+
+</details>
+
+## Japanese Keyboard Layout
+
+<details>
+<summary>Click here to expand and see details about Japanese keyboard layout setup with hiragana input</summary>
+
+### Japanese Input Method Setup
+
+#### Installation:
+Install the required packages for Japanese input method:
+```bash
+sudo pacman -S ibus-anthy ibus
+```
+
+#### Initial Setup:
+1. Start the IBus daemon:
+   ```bash
+   ibus-daemon -drx
+   ```
+   Or enable and start the systemd service:
+   ```bash
+   systemctl --user enable --now ibus.service
+   ```
+
+2. Add IBus to your startup applications to automatically start on login
+
+3. Configure IBus to include Japanese (Anthy) input method:
+   - Run `ibus-setup` to open the configuration window
+   - Click on "Input Method" tab
+   - Add "Japanese (Anthy)" from the list of available input methods
+   - Set the input method to hiragana as default
+
+4. Log out and log back in for the changes to take effect, or restart your session
+
+#### Usage:
+- Use `Super + Space` (or configured key combination) to switch between input methods
+- When Japanese (Anthy) is active, you'll be able to type in hiragana
+- Type hiragana and press space to convert to kanji if needed
+
+#### Alternative Configuration:
+You can also manually set the input method to hiragana through the IBus preferences menu after installation.
 
 </details>
