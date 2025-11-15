@@ -3,9 +3,76 @@
 This repository contains my personal dotfiles and configuration files for CachyOS, including custom setups for my OMEN Transcend Gaming Laptop 14-fb0xxx.
 
 ## Table of Contents
+- [Swappiness Configuration](#swappiness-configuration)
 - [Virtualization Setup](#virtualization-setup)
 - [Keyboard RGB Setup](#keyboard-rgb-setup)
 - [Japanese Keyboard Layout](#japanese-keyboard-layout)
+
+## Swappiness Configuration
+
+<details>
+<summary>Click here to expand and see details about swappiness configuration for optimal memory management</summary>
+
+### Swappiness Configuration for Systems with Large RAM
+
+#### PROBLEM:
+- System was configured with swappiness set to 150, which is too aggressive for a system with 32GB RAM
+- High swappiness causes the kernel to swap to disk too aggressively even when ample RAM is available
+- This can cause reduced performance on systems with large amounts of RAM
+- Note: This was the default setting on my system, which is unusually high (typical defaults are 60)
+
+#### SOLUTION:
+1. Check current swappiness value:
+   ```bash
+   cat /proc/sys/vm/swappiness
+   # Or use sysctl
+   sysctl vm.swappiness
+   ```
+
+2. Find where swappiness is configured (likely in /etc/sysctl.conf or related files):
+   ```bash
+   sudo grep -r "swappiness" /etc/
+   ```
+
+3. Edit /etc/sysctl.conf to set an appropriate swappiness value:
+   ```bash
+   sudo nvim /etc/sysctl.conf
+   ```
+   Add or modify the line to:
+   ```
+   vm.swappiness = 10
+   ```
+   (Value between 1-10 is appropriate for systems with large RAM)
+
+4. Apply the changes immediately without reboot:
+   ```bash
+   sudo sysctl -p
+   ```
+
+5. Verify the new value is applied:
+   ```bash
+   cat /proc/sys/vm/swappiness
+   # Should now show 10
+   ```
+
+#### DETAILS:
+- Swappiness is a kernel parameter that controls how aggressively the kernel swaps memory to disk
+- Value ranges from 0-200, where:
+  - 0 = Avoid swapping as much as possible
+  - 10 = Very conservative, only swap when necessary (recommended for large RAM systems)
+  - 60 = Default value on many distributions
+  - Higher values = More aggressive swapping
+- For systems with 32GB RAM like this OMEN laptop, a value of 10 is appropriate
+- The setting in /etc/sysctl.conf will persist across reboots
+
+#### TROUBLESHOOTING:
+- If swappiness resets after reboot, verify /etc/sysctl.conf is being read during boot
+- Check for other sysctl configuration files that might override the setting in /etc/sysctl.d/
+- Ensure the line `vm.swappiness = 10` doesn't appear multiple times with different values in sysctl configuration files
+
+This configuration helps optimize memory usage on systems with large amounts of RAM by reducing unnecessary swapping to disk.
+
+</details>
 
 ## Virtualization Setup
 
