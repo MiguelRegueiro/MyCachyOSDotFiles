@@ -1,0 +1,97 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+format = """
+$cmd_duration$line_break$line_break\
+[](surface0)\
+$os$username\
+[](fg:surface0 bg:overlay0)\
+$directory\
+[](fg:overlay0 bg:blue)\
+$git_branch$git_status\
+[](fg:blue bg:purple)\
+$python$nodejs$rust$golang$docker_context\
+[](fg:purple bg:accent)\
+$time\
+[](fg:accent)\
+$line_break$character"""
+
+palette = "custom_dark_polished"
+
+# ---------- Modules ----------
+
+[username]
+show_always = true
+style_user = "bg:surface0 fg:text"
+format = '[ $user ]($style)'
+
+[directory]
+style = "fg:text bg:overlay0"
+format = "[ $path ]($style)"
+truncation_length = 3
+truncation_symbol = "…/"
+
+[git_branch]
+symbol = ""
+style = "bg:blue fg:base"
+format = '[ $symbol $branch ]($style)'
+
+[git_status]
+style = "bg:blue fg:base"
+format = '[ $all_status$ahead_behind ]($style)'
+
+[python]
+symbol = ""
+style = "bg:purple fg:base"
+format = '[ $symbol $version ]($style)'
+
+[nodejs]
+symbol = ""
+style = "bg:purple fg:base"
+format = '[ $symbol $version ]($style)'
+
+[rust]
+symbol = ""
+style = "bg:purple fg:base"
+format = '[ $symbol $version ]($style)'
+
+[golang]
+symbol = ""
+style = "bg:purple fg:base"
+format = '[ $symbol $version ]($style)'
+
+[docker_context]
+symbol = ""
+style = "bg:purple fg:base"
+format = '[ $symbol $context ]($style)'
+
+[time]
+disabled = false
+time_format = "%H:%M"
+style = "bg:accent fg:base"
+format = '[  $time ]($style)'
+
+[line_break]
+disabled = false
+
+[cmd_duration]
+min_time = 1
+format = "[$duration](fg:lavender)"
+style = "fg:lavender"
+
+# ---------- Modules ----------
+
+[character]
+disabled = false
+success_symbol = '[➜](bold fg:#5246f2)'  # Arrow
+error_symbol = '[✘](bold fg:#ff0000)'    # X mark
+
+# ---------- Custom Palette (Refined) ----------
+[palettes.custom_dark_polished]
+surface0 = "#262631"       # Darker grey
+overlay0 = "#2f2f3c"       # Slightly lighter grey
+blue     = "#0286de"       # Muted blue-purple
+purple   = "#2D5BE3"       # Rich violet
+accent   = "#22222e"       # Deep bluish grey for end cap
+lavender = "#9a9fe1"       # Used in character and time
+text     = "#d4d6e0"       # Clean, not too bright
+base     = "#d4d6e0"       # Background base

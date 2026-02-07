@@ -1,0 +1,149 @@
+{
+       "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+//    "logo": {
+//        "type": "builtin",
+//        "height": 15,
+//        "width": 30,
+//        "padding": {
+//            "top": 2,
+//            "left": 3
+//        }
+//    },                          
+
+        "logo": {
+      "type": "kitty",
+      "source": "/home/regueiro/.config/fastfetch/CachyOS3.png",
+      "width":38,
+      "padding": {
+      "top": 3,
+      "left": 2,
+      "right": 2,
+      }
+    },
+    "modules": [
+        "break",
+
+        {
+            "type": "host",
+            "key": "PC",
+            "keyColor": "#04b4e0"
+        },
+        {
+            "type": "cpu",
+            "key": "CPU",
+            "keyColor": "#04b4e0"
+        },
+        {
+            "type": "gpu",
+            "key": "GPU",
+            "keyColor": "#04b4e0"
+        },
+        {
+            "type": "memory",
+            "key": "RAM",
+            "keyColor": "#04b4e0"
+        },
+        {
+            "type": "swap",
+            "key": "Swap",
+            "keyColor": "#04b4e0"
+        },
+        {
+            "type": "disk",
+            "key": "Disk",
+            "keyColor": "#04b4e0"
+        },
+
+        "break",
+
+        {
+            "type": "os",
+            "key": "OS",
+            "keyColor": "#527cfa"
+        },
+        {
+            "type": "kernel",
+            "key": "Kernel",
+            "keyColor": "#527cfa"
+        },
+        {
+            "type": "bios",
+            "key": "UEFI",
+            "keyColor": "#527cfa"
+        },
+
+                {
+            "type": "de",
+            "key": "DE",
+            "keyColor": "#527cfa"
+        },
+//        {
+//            "type": "lm",
+//            "key": "LM",
+//            "keyColor": "blue"
+//        },
+        {
+            "type": "packages",
+            "key": "Packages",
+            "keyColor": "#527cfa"
+        },
+        {
+            "type": "shell",
+            "key": "Shell",
+            "keyColor": "#527cfa"
+        },
+
+//        {
+//            "type": "wm",
+//            "key": "WM",
+//            "keyColor": "blue"
+//         },
+//        {
+//            "type": "wmtheme",
+//            "key": "WMtheme",
+//            "keyColor": "blue"
+//        },
+        {
+            "type": "terminal",
+            "key": "Terminal",
+            "keyColor": "#527cfa"
+        },
+
+        "break",
+
+        {
+            "type": "command",
+            "key": "OS Age ",
+            "keyColor": "#0388e1",
+            "text": "birth_install=$(stat -c %W /); current=$(date +%s); time_progression=$((current - birth_install)); days_difference=$((time_progression / 86400)); echo $days_difference days"
+        },
+        {
+            "type": "uptime",
+            "key": "Uptime ",
+            "keyColor": "#0388e1"
+        },
+        {
+            "type": "datetime",
+            "key": "DateTime ",
+            "keyColor": "#0388e1"
+        },
+
+                {
+            "type": "battery",
+            "format": "{/4}{-}{/}{4}{?5} [{5}]{?}",
+            "keyColor": "#0388e1"
+        },
+
+
+//        {
+//            "type": "colors"
+//        },
+
+ //        {
+ //            "type": "colors",
+ //            "paddingLeft": 0,
+ //            "symbol": "circle"
+ //        }
+ 
+    ]
+}
