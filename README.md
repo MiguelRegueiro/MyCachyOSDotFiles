@@ -295,21 +295,58 @@ To mount an external NTFS drive for Steam games:
 
 ### 🚀 Development & Productivity
 
-#### Virtualization Setup (QEMU/KVM)
-Set up a complete virtualization environment with QEMU, KVM, and Virt-Manager.
 
-1.  **Install packages:**
-    ```bash
-    sudo pacman -S qemu-full virt-manager virt-viewer dnsmasq bridge-utils libguestfs ebtables vde2 openbsd-netcat
-    ```
-2.  **Start and enable `libvirtd.service`**.
-3.  **Add your user to the required groups** (log out and back in after):
-    ```bash
-    sudo usermod -aG libvirt,libvirt-qemu,kvm,qemu $USER
-    ```
-4.  **Start and enable `iptables.service`** for network configurations.
-5.  **Restart `libvirtd.service`**.
-You can now use **Virt-Manager** to create and manage VMs.
+### Virtualization Setup (QEMU/KVM)
+
+Set up a high-performance virtualization environment using KVM as the hypervisor, QEMU as the emulator, and Virt-Manager as the GUI.
+
+#### 1. Install Packages
+
+We include `edk2-ovmf` for UEFI support (required for Windows 11 and modern Linux) and `swtpm` for TPM emulation.
+
+```bash
+sudo pacman -S qemu-full virt-manager virt-viewer dnsmasq libguestfs ebtables vde2 openbsd-netcat libvirt edk2-ovmf swtpm
+
+```
+
+> **Note:** `bridge-utils` has been removed as it is deprecated in favor of `iproute2` (pre-installed in Arch).
+
+#### 2. Configure Permissions
+
+Add your user to the `libvirt` and `kvm` groups to manage VMs without root privileges.
+
+```bash
+sudo usermod -aG libvirt,kvm $USER
+
+```
+
+*You must **log out and log back in** for these changes to take effect.*
+
+#### 3. Enable and Start Services
+
+Enable the virtualization daemon and its socket. Using the `.socket` allows for better on-demand activation.
+
+```bash
+sudo systemctl enable --now libvirtd.socket
+sudo systemctl enable --now libvirtd.service
+
+```
+
+#### 4. Configure Virtual Networking
+
+By default, the "default" NAT network is not started. You must enable it to give your VMs internet access.
+
+```bash
+sudo virsh net-autostart default
+sudo virsh net-start default
+
+```
+
+#### 5. Verification
+
+Open **Virt-Manager** from your application menu. If you can connect to "QEMU/KVM" without a password prompt, your setup is correct.
+
+---
 
 ### 🛠️ Utilities, Media & Language
 
