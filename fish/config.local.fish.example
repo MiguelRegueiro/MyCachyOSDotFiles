@@ -1,0 +1,5 @@
+# Local-only overrides (do not commit secrets).
+# Copy this file to ~/.config/fish/config.local.fish and customize as needed.
+
+# Example private shortcut:
+# abbr -a sshserver "ssh username@hostname"
