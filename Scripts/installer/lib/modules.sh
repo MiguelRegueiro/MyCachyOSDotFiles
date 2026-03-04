@@ -174,15 +174,18 @@ install_gnome_extensions_bundle() {
   fi
 
   if ! command -v gext >/dev/null 2>&1; then
-    warn "gext is unavailable; enabling only extensions that are already installed."
-    local preinstalled_uuid
+    log "gext is unavailable; enabling only extensions that are already installed."
+    local preinstalled_uuid missing_count=0
     for preinstalled_uuid in "${uuids[@]}"; do
       if gnome-extensions info "$preinstalled_uuid" >/dev/null 2>&1; then
         run_cmd "gnome-extensions enable \"$preinstalled_uuid\"" || true
       else
-        warn "Extension not installed yet: $preinstalled_uuid"
+        missing_count=$((missing_count + 1))
       fi
     done
+    if [[ "$missing_count" -gt 0 ]]; then
+      log "Info: $missing_count extension(s) are not installed yet. Install them manually or install gext."
+    fi
     record_completed "gnome-extensions:enable-preinstalled"
     return 0
   fi
@@ -208,6 +211,13 @@ set_default_fish_shell_if_available() {
     return 0
   fi
 
+  local current_shell
+  current_shell="$(getent passwd "$USER" | cut -d: -f7 || true)"
+  if [[ "$current_shell" == "$fish_path" ]]; then
+    log "Fish is already the default shell for $USER."
+    return 0
+  fi
+
   if [[ "$DRY_RUN" -eq 1 ]]; then
     run_cmd "chsh -s \"$fish_path\""
     FISH_SHELL_CHANGED=1
@@ -222,6 +232,37 @@ set_default_fish_shell_if_available() {
   if run_cmd "chsh -s \"$fish_path\""; then
     FISH_SHELL_CHANGED=1
   fi
+}
+
+ensure_rust_build_deps() {
+  if [[ "$RUST_BUILD_DEPS_READY" -eq 1 ]]; then
+    return 0
+  fi
+  if [[ "$SKIP_PACKAGES" -eq 1 ]]; then
+    return 0
+  fi
+
+  if [[ "$PKG_KIND" == "fedora" ]]; then
+    install_packages "terminal-rust-deps" openssl-devel pkgconf-pkg-config gcc make || true
+  elif [[ "$PKG_KIND" == "arch" ]]; then
+    install_packages "terminal-rust-deps" openssl pkgconf base-devel || true
+  fi
+  RUST_BUILD_DEPS_READY=1
+}
+
+ensure_starship_available() {
+  if command -v starship >/dev/null 2>&1; then
+    return 0
+  fi
+
+  warn "starship binary not found in system packages; trying cargo fallback."
+  if ! command -v cargo >/dev/null 2>&1; then
+    warn "cargo is unavailable; cannot install starship fallback."
+    return 1
+  fi
+
+  ensure_rust_build_deps
+  run_cmd "cargo install starship --locked"
 }
 
 is_gnome_session() {
@@ -271,7 +312,7 @@ module_base() {
 
 module_terminal() {
   print_section "Module: terminal"
-  install_packages "terminal" fish kitty starship fastfetch fzf btop cargo || true
+  install_packages "terminal" fish kitty fastfetch fzf btop cargo || true
 
   if confirm_action "Copy Fish config to ~/.config/fish"; then
     copy_tree_as_dir "$REPO_ROOT/fish" "$HOME/.config/fish"
@@ -292,6 +333,7 @@ module_terminal() {
 
   if confirm_action "Install cargo-update (cargo install cargo-update)"; then
     if command -v cargo >/dev/null 2>&1; then
+      ensure_rust_build_deps
       run_cmd "cargo install cargo-update"
     else
       warn "cargo not found; skipping cargo-update install."
@@ -300,10 +342,15 @@ module_terminal() {
 
   if confirm_action "Install runin (cargo install runin)"; then
     if command -v cargo >/dev/null 2>&1; then
+      ensure_rust_build_deps
       run_cmd "cargo install runin"
     else
       warn "cargo not found; skipping runin install."
     fi
+  fi
+
+  if confirm_action "Ensure starship binary is installed"; then
+    ensure_starship_available || true
   fi
 }
 
@@ -369,13 +416,7 @@ module_virtualization() {
 
 module_gnome() {
   print_section "Module: gnome"
-  if [[ "$PKG_KIND" == "fedora" ]]; then
-    install_packages "gnome" gnome-tweaks gnome-extensions-cli || true
-  elif [[ "$PKG_KIND" == "arch" ]]; then
-    install_packages "gnome" gnome-tweaks || true
-  else
-    install_packages "gnome" gnome-tweaks || true
-  fi
+  install_packages "gnome" gnome-tweaks || true
 
   if ! is_gnome_session; then
     warn "GNOME session not detected. GNOME-specific actions may fail."
