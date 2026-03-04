@@ -20,6 +20,7 @@ source "$INSTALLER_ROOT/lib/summary.sh"
 
 main() {
   local show_help=0
+  trap stop_sudo_keepalive EXIT INT TERM
   init_ui
   load_flatpak_apps
 
@@ -104,6 +105,7 @@ main() {
 
   if [[ "$requires_root" -eq 1 ]]; then
     ensure_sudo_ready
+    start_sudo_keepalive
   fi
 
   local selected

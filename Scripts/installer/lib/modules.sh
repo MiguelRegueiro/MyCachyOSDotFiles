@@ -194,18 +194,14 @@ install_gnome_extensions_bundle() {
   elif [[ -x "$HOME/.local/bin/gext" ]]; then
     gext_cmd="$HOME/.local/bin/gext"
   fi
-
-  if [[ -z "$gext_cmd" ]]; then
-    if [[ "$SKIP_PACKAGES" -eq 0 ]]; then
-      log "gext missing. Installing gnome-extensions-cli with pip (user install)..."
-      if [[ "$PKG_KIND" == "arch" ]]; then
-        install_packages "gnome-extensions-cli-deps" python-pip || true
-      else
-        install_packages "gnome-extensions-cli-deps" python3-pip || true
-      fi
-      run_cmd "python3 -m pip install --user --upgrade gnome-extensions-cli" || true
+  if [[ -z "$gext_cmd" && "$SKIP_PACKAGES" -eq 0 ]]; then
+    log "gext missing. Installing gnome-extensions-cli with pip (user install)..."
+    if [[ "$PKG_KIND" == "arch" ]]; then
+      install_packages "gnome-extensions-cli-deps" python-pip || true
+    else
+      install_packages "gnome-extensions-cli-deps" python3-pip || true
     fi
-
+    run_cmd_soft "python3 -m pip install --user --upgrade gnome-extensions-cli" || true
     if command -v gext >/dev/null 2>&1; then
       gext_cmd="gext"
     elif [[ -x "$HOME/.local/bin/gext" ]]; then
@@ -213,35 +209,51 @@ install_gnome_extensions_bundle() {
     fi
   fi
 
-  if [[ -z "$gext_cmd" ]]; then
-    log "gext is unavailable; enabling only extensions that are already installed."
-    local preinstalled_uuid missing_count=0
-    for preinstalled_uuid in "${uuids[@]}"; do
-      if gnome-extensions info "$preinstalled_uuid" >/dev/null 2>&1; then
-        run_cmd_soft "gnome-extensions enable \"$preinstalled_uuid\"" || true
-      else
-        missing_count=$((missing_count + 1))
-      fi
-    done
-    if [[ "$missing_count" -gt 0 ]]; then
-      warn "$missing_count extension(s) are not installed. Install pip/gext or use GNOME Extension Manager manually."
-    fi
-    record_completed "gnome-extensions:enable-preinstalled"
-    return 0
-  fi
-
   local uuid
+  local failed_count=0
   for uuid in "${uuids[@]}"; do
-    # Prefer filesystem backend to avoid interactive Shell dialog prompts.
-    if run_cmd "\"$gext_cmd\" --filesystem install \"$uuid\""; then
-      run_cmd_soft "gnome-extensions enable \"$uuid\"" || true
-    elif run_cmd "\"$gext_cmd\" install \"$uuid\""; then
-      run_cmd_soft "gnome-extensions enable \"$uuid\"" || true
-    else
+    local installed=0
+
+    # Primary path: GNOME Shell D-Bus API install by UUID.
+    if command -v gdbus >/dev/null 2>&1 && is_gnome_session; then
+      run_cmd_soft "gdbus call --session --dest org.gnome.Shell.Extensions --object-path /org/gnome/Shell/Extensions --method org.gnome.Shell.Extensions.InstallRemoteExtension \"$uuid\"" || true
+      if [[ "$DRY_RUN" -eq 1 ]]; then
+        installed=1
+      else
+        local tries=0
+        while [[ "$tries" -lt 10 ]]; do
+          if gnome-extensions info "$uuid" >/dev/null 2>&1; then
+            installed=1
+            break
+          fi
+          sleep 1
+          tries=$((tries + 1))
+        done
+      fi
+    fi
+
+    # Fallback path: gext if D-Bus install didn't register extension.
+    if [[ "$installed" -eq 0 && -n "$gext_cmd" ]]; then
+      if run_cmd_soft "\"$gext_cmd\" --filesystem install \"$uuid\""; then
+        installed=1
+      elif run_cmd_soft "\"$gext_cmd\" install \"$uuid\""; then
+        installed=1
+      fi
+    fi
+
+    if [[ "$DRY_RUN" -eq 0 ]] && ! gnome-extensions info "$uuid" >/dev/null 2>&1; then
       warn "Failed to install extension: $uuid"
       record_failed "gnome-extension:$uuid"
+      failed_count=$((failed_count + 1))
+      continue
     fi
+
+    run_cmd_soft "gnome-extensions enable \"$uuid\"" || true
   done
+
+  if [[ "$failed_count" -gt 0 ]]; then
+    warn "$failed_count extension(s) could not be installed."
+  fi
 
   record_completed "gnome-extensions:bundle"
 }
@@ -298,32 +310,15 @@ ensure_starship_available() {
     return 0
   fi
 
-  log "starship not found. Trying distro package first..."
-  if [[ "$PKG_KIND" == "arch" ]]; then
-    install_packages "terminal-starship" starship || true
-  elif [[ "$PKG_KIND" == "fedora" ]]; then
-    run_root_cmd_soft "dnf install -y starship" || true
-  fi
-
-  if command -v starship >/dev/null 2>&1; then
-    return 0
-  fi
-
-  warn "starship package unavailable; trying cargo fallback."
-  if ! command -v cargo >/dev/null 2>&1; then
-    warn "cargo is unavailable; cannot install starship fallback."
+  if ! command -v curl >/dev/null 2>&1; then
+    warn "curl is required to install starship via official installer."
     return 1
   fi
 
-  ensure_rust_build_deps
-  run_cmd "cargo install starship --locked"
+  run_cmd "mkdir -p \"$HOME/.local/bin\""
+  run_cmd "curl -sS https://starship.rs/install.sh | sh -s -- -y -b \"$HOME/.local/bin\""
 
-  if [[ -x "$HOME/.cargo/bin/starship" ]]; then
-    run_cmd "mkdir -p \"$HOME/.local/bin\""
-    run_cmd "ln -sf \"$HOME/.cargo/bin/starship\" \"$HOME/.local/bin/starship\""
-  fi
-
-  if command -v starship >/dev/null 2>&1 || [[ -x "$HOME/.local/bin/starship" ]] || [[ -x "$HOME/.cargo/bin/starship" ]]; then
+  if command -v starship >/dev/null 2>&1 || [[ -x "$HOME/.local/bin/starship" ]]; then
     record_completed "terminal:starship-installed"
     return 0
   fi

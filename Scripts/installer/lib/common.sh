@@ -14,6 +14,7 @@ INSTALL_FLATPAKS=${INSTALL_FLATPAKS:-0}
 ROOT_ACTIONS_ALLOWED=${ROOT_ACTIONS_ALLOWED:-1}
 FISH_SHELL_CHANGED=${FISH_SHELL_CHANGED:-0}
 RUST_BUILD_DEPS_READY=${RUST_BUILD_DEPS_READY:-0}
+SUDO_KEEPALIVE_PID=${SUDO_KEEPALIVE_PID:-0}
 
 DISTRO_ID=${DISTRO_ID:-""}
 DISTRO_LIKE=${DISTRO_LIKE:-""}
@@ -552,4 +553,35 @@ ensure_sudo_ready() {
   fi
 
   die "Failed to authenticate with sudo. Re-run with package installation disabled or fix sudo access."
+}
+
+start_sudo_keepalive() {
+  if [[ "$DRY_RUN" -eq 1 ]] || [[ "$EUID" -eq 0 ]]; then
+    return 0
+  fi
+  if [[ "$ROOT_ACTIONS_ALLOWED" -eq 0 ]]; then
+    return 0
+  fi
+  if ! command -v sudo >/dev/null 2>&1; then
+    return 0
+  fi
+  if [[ "$SUDO_KEEPALIVE_PID" -gt 0 ]] && kill -0 "$SUDO_KEEPALIVE_PID" 2>/dev/null; then
+    return 0
+  fi
+
+  (
+    while true; do
+      sudo -n -v >/dev/null 2>&1 || exit 0
+      sleep 60
+    done
+  ) &
+  SUDO_KEEPALIVE_PID=$!
+}
+
+stop_sudo_keepalive() {
+  if [[ "$SUDO_KEEPALIVE_PID" -gt 0 ]] && kill -0 "$SUDO_KEEPALIVE_PID" 2>/dev/null; then
+    kill "$SUDO_KEEPALIVE_PID" >/dev/null 2>&1 || true
+    wait "$SUDO_KEEPALIVE_PID" 2>/dev/null || true
+  fi
+  SUDO_KEEPALIVE_PID=0
 }
