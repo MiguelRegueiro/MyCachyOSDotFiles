@@ -1,0 +1,11 @@
+blur-my-shell@aunetx
+clipboard-indicator@tudmotu.com
+ding@rastersoft.com
+just-perfection-desktop@just-perfection
+quick-settings-audio-panel@rayzeq.github.io
+drive-menu@gnome-shell-extensions.gcampax.github.com
+space-bar@luchrioh
+tophat@fflewddur.github.io
+trayIconsReloaded@selfmade.pl
+lan-ip-address@mrhuber.com
+ssh-watchdog@miguelregueiro.github.io

@@ -130,6 +130,7 @@ Visual style:
    sudo pacman -S gnome-tweaks
    ```
 2. Enable the **User Themes** extension in `gnome-extensions-app`.
+3. Optional: add GNOME extension UUIDs (one per line) in `Scripts/gnome_extensions.txt`; the installer can install/enable them.
 
 Included themes (`icons/`):
 

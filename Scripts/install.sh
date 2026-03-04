@@ -114,7 +114,7 @@ is_core_module() {
 module_description() {
   case "$1" in
     base) echo "icons, wallpapers, fonts, base directories" ;;
-    gnome) echo "GNOME tweaks package, shortcuts script, wallpaper" ;;
+    gnome) echo "GNOME tweaks package, shortcuts script, wallpaper, extensions from Scripts/gnome_extensions.txt" ;;
     terminal) echo "fish/kitty/starship/fastfetch setup + configs" ;;
     media) echo "mpv stack packages + mpv config" ;;
     language) echo "ibus + anthy input setup" ;;
@@ -141,7 +141,10 @@ print_section() {
 }
 
 log() {
-  printf '%s\n' "$*" | tee -a "$LOG_FILE"
+  local msg="$*"
+  printf '%s\n' "$msg"
+  # Save plain text in log file (strip ANSI escapes from styled lines).
+  printf '%s\n' "$msg" | sed -E $'s/\x1B\\[[0-9;]*[[:alpha:]]//g' >>"$LOG_FILE"
 }
 
 warn() {
@@ -403,7 +406,7 @@ run_cmd() {
   fi
 
   log "[RUN] $cmd"
-  if bash -c "$cmd" >>"$LOG_FILE" 2>&1; then
+  if bash -c "$cmd" 2>&1 | tee -a "$LOG_FILE"; then
     record_completed "cmd:$cmd"
     return 0
   fi
@@ -430,7 +433,7 @@ run_root_cmd() {
 
   if [[ "$EUID" -eq 0 ]]; then
     log "[RUN][ROOT] $cmd"
-    if bash -c "$cmd" >>"$LOG_FILE" 2>&1; then
+    if bash -c "$cmd" 2>&1 | tee -a "$LOG_FILE"; then
       record_completed "root-cmd:$cmd"
       return 0
     fi
@@ -446,7 +449,7 @@ run_root_cmd() {
   fi
 
   log "[RUN][sudo] $cmd"
-  if sudo bash -c "$cmd" >>"$LOG_FILE" 2>&1; then
+  if sudo bash -c "$cmd" 2>&1 | tee -a "$LOG_FILE"; then
     record_completed "root-cmd:$cmd"
     return 0
   fi
@@ -618,6 +621,49 @@ install_flatpak_bundle() {
   record_completed "flatpak:bundle"
 }
 
+install_gnome_extensions_bundle() {
+  local ext_file="$REPO_ROOT/Scripts/gnome_extensions.txt"
+  print_section "GNOME extensions"
+
+  if [[ ! -f "$ext_file" ]]; then
+    warn "Extensions file not found: $ext_file"
+    record_skipped "gnome-extensions:file-missing"
+    return 0
+  fi
+
+  local uuids=()
+  mapfile -t uuids < <(sed -e 's/[[:space:]]*$//' -e 's/^[[:space:]]*//' "$ext_file" | awk 'NF && $1 !~ /^#/')
+  if [[ "${#uuids[@]}" -eq 0 ]]; then
+    warn "No extension UUIDs configured in $ext_file"
+    record_skipped "gnome-extensions:empty-list"
+    return 0
+  fi
+
+  if ! command -v gext >/dev/null 2>&1; then
+    warn "gext not found. Install 'gnome-extensions-cli' to enable automated extension install."
+    record_skipped "gnome-extensions:missing-gext"
+    return 0
+  fi
+
+  if ! command -v gnome-extensions >/dev/null 2>&1; then
+    warn "gnome-extensions command not found; install/enable GNOME Shell tools."
+    record_skipped "gnome-extensions:missing-command"
+    return 0
+  fi
+
+  local uuid
+  for uuid in "${uuids[@]}"; do
+    if run_cmd "gext install \"$uuid\""; then
+      run_cmd "gnome-extensions enable \"$uuid\"" || true
+    else
+      warn "Failed to install extension: $uuid"
+      record_failed "gnome-extension:$uuid"
+    fi
+  done
+
+  record_completed "gnome-extensions:bundle"
+}
+
 ensure_base_dirs() {
   run_cmd "mkdir -p \"$HOME/.config\" \"$HOME/.local/share/icons\" \"$HOME/.local/share/fonts\" \"$HOME/Pictures/wallpapers\""
 }
@@ -775,6 +821,10 @@ module_gnome() {
   if confirm_action "Set GNOME wallpaper to ~/Pictures/wallpapers/background"; then
     set_gnome_wallpaper || true
   fi
+
+  if confirm_action "Install GNOME extensions from Scripts/gnome_extensions.txt"; then
+    install_gnome_extensions_bundle || true
+  fi
 }
 
 print_summary() {
@@ -835,6 +885,13 @@ print_summary() {
   log "$(style '1;36' "Installer finished.")"
   log "Log file: $LOG_FILE"
   log "Backup dir: $BACKUP_DIR"
+}
+
+pause_before_exit_if_guided() {
+  if [[ "$WIZARD_USED" -eq 1 && "$ASSUME_YES" -eq 0 && -t 0 ]]; then
+    echo
+    read -r -p "Press Enter to close..." _
+  fi
 }
 
 main() {
@@ -986,6 +1043,7 @@ main() {
   fi
 
   print_summary
+  pause_before_exit_if_guided
 }
 
 main "$@"
