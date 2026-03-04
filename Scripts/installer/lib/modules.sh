@@ -416,6 +416,7 @@ ensure_cargo_update_available() {
 }
 
 ensure_runin_available() {
+  ensure_fd_available || true
   if ensure_cargo_binary_on_path "runin"; then
     return 0
   fi
@@ -426,7 +427,33 @@ ensure_runin_available() {
 
   ensure_rust_build_deps
   run_cmd "cargo install runin"
+  ensure_fd_available || true
   ensure_cargo_binary_on_path "runin"
+}
+
+ensure_fd_available() {
+  if command -v fd >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if [[ "$SKIP_PACKAGES" -eq 0 ]]; then
+    if [[ "$PKG_KIND" == "fedora" ]]; then
+      install_packages "terminal-fd" fd-find || true
+    elif [[ "$PKG_KIND" == "arch" ]]; then
+      install_packages "terminal-fd" fd || true
+    fi
+  fi
+
+  if command -v fd >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if command -v fdfind >/dev/null 2>&1; then
+    run_cmd "mkdir -p \"$HOME/.local/bin\""
+    run_cmd "ln -sf \"$(command -v fdfind)\" \"$HOME/.local/bin/fd\""
+  fi
+
+  command -v fd >/dev/null 2>&1 || [[ -x "$HOME/.local/bin/fd" ]]
 }
 
 ensure_starship_available() {
@@ -498,7 +525,11 @@ module_base() {
 
 module_terminal() {
   print_section "Module: terminal"
-  install_packages "terminal" fish kitty fastfetch fzf btop cargo || true
+  if [[ "$PKG_KIND" == "fedora" ]]; then
+    install_packages "terminal" fish kitty fastfetch fzf btop cargo fd-find || true
+  else
+    install_packages "terminal" fish kitty fastfetch fzf btop cargo fd || true
+  fi
 
   if confirm_action "Copy Fish config to ~/.config/fish"; then
     copy_tree_as_dir "$REPO_ROOT/fish" "$HOME/.config/fish"
