@@ -64,11 +64,6 @@ interactive_wizard() {
   log "  dry-run: $(style '1;34' "$([[ "$DRY_RUN" -eq 1 ]] && echo yes || echo no)")"
   log "  install packages: $(style '1;34' "$([[ "$SKIP_PACKAGES" -eq 1 ]] && echo no || echo yes)")"
   log "  install flatpak apps: $(style '1;34' "$([[ "$INSTALL_FLATPAKS" -eq 1 ]] && echo yes || echo no)")"
-  if [[ "$ASK_EACH_CMD" -eq 1 ]]; then
-    log "  command confirmations: $(style '1;34' "yes (set via flag)")"
-  else
-    log "  command confirmations: $(style '1;34' "no")"
-  fi
   log "  modules: $(style '1;34' "$MODULES_CSV")"
   if ! confirm "Start now with this plan?"; then
     log "Aborted by user."

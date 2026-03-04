@@ -63,6 +63,11 @@ apply_gnome_shortcuts_from_installer() {
 
   # Battery percentage
   run_cmd "gsettings set org.gnome.desktop.interface show-battery-percentage true"
+  # Prefer dark appearance for GNOME-supported apps/themes.
+  run_cmd "gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'"
+  # Theme defaults
+  run_cmd "gsettings set org.gnome.desktop.interface cursor-theme 'Bibata-Modern-Classic'"
+  run_cmd "gsettings set org.gnome.desktop.interface icon-theme 'MacTahoe-Dark'"
 
   # Custom launcher slots
   run_cmd "gsettings set $media_schema custom-keybindings \"['$base_path/custom0/', '$base_path/custom1/', '$base_path/custom2/', '$base_path/custom3/', '$base_path/custom4/', '$base_path/custom5/']\""
@@ -173,7 +178,32 @@ install_gnome_extensions_bundle() {
     return 0
   fi
 
-  if ! command -v gext >/dev/null 2>&1; then
+  local gext_cmd=""
+  if command -v gext >/dev/null 2>&1; then
+    gext_cmd="gext"
+  elif [[ -x "$HOME/.local/bin/gext" ]]; then
+    gext_cmd="$HOME/.local/bin/gext"
+  fi
+
+  if [[ -z "$gext_cmd" ]]; then
+    if [[ "$SKIP_PACKAGES" -eq 0 ]]; then
+      log "gext missing. Installing gnome-extensions-cli with pip (user install)..."
+      if [[ "$PKG_KIND" == "arch" ]]; then
+        install_packages "gnome-extensions-cli-deps" python-pip || true
+      else
+        install_packages "gnome-extensions-cli-deps" python3-pip || true
+      fi
+      run_cmd "python3 -m pip install --user --upgrade gnome-extensions-cli" || true
+    fi
+
+    if command -v gext >/dev/null 2>&1; then
+      gext_cmd="gext"
+    elif [[ -x "$HOME/.local/bin/gext" ]]; then
+      gext_cmd="$HOME/.local/bin/gext"
+    fi
+  fi
+
+  if [[ -z "$gext_cmd" ]]; then
     log "gext is unavailable; enabling only extensions that are already installed."
     local preinstalled_uuid missing_count=0
     for preinstalled_uuid in "${uuids[@]}"; do
@@ -184,7 +214,7 @@ install_gnome_extensions_bundle() {
       fi
     done
     if [[ "$missing_count" -gt 0 ]]; then
-      log "Info: $missing_count extension(s) are not installed yet. Install them manually or install gext."
+      warn "$missing_count extension(s) are not installed. Install pip/gext or use GNOME Extension Manager manually."
     fi
     record_completed "gnome-extensions:enable-preinstalled"
     return 0
@@ -192,7 +222,10 @@ install_gnome_extensions_bundle() {
 
   local uuid
   for uuid in "${uuids[@]}"; do
-    if run_cmd "gext install \"$uuid\""; then
+    # Prefer filesystem backend to avoid interactive Shell dialog prompts.
+    if run_cmd "\"$gext_cmd\" --filesystem install \"$uuid\""; then
+      run_cmd "gnome-extensions enable \"$uuid\"" || true
+    elif run_cmd "\"$gext_cmd\" install \"$uuid\""; then
       run_cmd "gnome-extensions enable \"$uuid\"" || true
     else
       warn "Failed to install extension: $uuid"
@@ -349,9 +382,7 @@ module_terminal() {
     fi
   fi
 
-  if confirm_action "Ensure starship binary is installed"; then
-    ensure_starship_available || true
-  fi
+  ensure_starship_available || true
 }
 
 module_media() {
@@ -416,7 +447,7 @@ module_virtualization() {
 
 module_gnome() {
   print_section "Module: gnome"
-  install_packages "gnome" gnome-tweaks || true
+  install_packages "gnome" gnome-tweaks gnome-extensions-app || true
 
   if ! is_gnome_session; then
     warn "GNOME session not detected. GNOME-specific actions may fail."
