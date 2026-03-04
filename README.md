@@ -16,6 +16,19 @@ This setup is tailored for CachyOS, but many parts work on other Arch-based syst
 
 ---
 
+## ✨ Features
+
+- **Modular installer** with dry-run support
+- **Automated GNOME desktop configuration** (workspaces, keybindings, themes)
+- **GNOME extensions automation** (Blur My Shell, TopHat)
+- **GPU-accelerated terminal stack** (Kitty + Fish + Starship + Fastfetch)
+- **Cross-distro support** (CachyOS/Arch and Fedora/Nobara)
+- **Language learning environment** (Anki, MPV setup, Japanese input)
+- **System tooling** (virtualization stack, media setup, developer utilities)
+- **Safe to rerun** with backups and idempotent configuration
+
+---
+
 ## 🚀 Install
 
 ```bash
