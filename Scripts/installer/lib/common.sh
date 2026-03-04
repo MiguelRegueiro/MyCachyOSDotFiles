@@ -24,7 +24,8 @@ USE_COLOR=${USE_COLOR:-0}
 
 MODULES=(
   "base"
-  "gnome"
+  "gnome-core"
+  "gnome-extensions"
   "terminal"
   "media"
   "language"
@@ -78,7 +79,7 @@ join_csv() {
 
 is_core_module() {
   case "$1" in
-    base|gnome|terminal|media) return 0 ;;
+    base|gnome-core|gnome-extensions|terminal|media) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -129,7 +130,8 @@ Options:
   --help                Show this help
 
 Modules:
-  base, gnome, terminal, media, language, virtualization
+  base, gnome-core, gnome-extensions, terminal, media, language, virtualization
+  (legacy alias: gnome -> gnome-core,gnome-extensions)
 USAGE
 }
 
@@ -149,11 +151,37 @@ selected_modules() {
   fi
 
   local parsed=()
+  local normalized=()
   local item
   IFS=',' read -r -a parsed <<<"$MODULES_CSV"
   for item in "${parsed[@]}"; do
     item="${item,,}"
-    contains_module "$item" || die "Unknown module: $item"
+    if [[ "$item" == "gnome" ]]; then
+      item="gnome-core,gnome-extensions"
+    fi
+
+    local expanded=()
+    local mod
+    IFS=',' read -r -a expanded <<<"$item"
+    for mod in "${expanded[@]}"; do
+      [[ -n "$mod" ]] || continue
+      contains_module "$mod" || die "Unknown module: $mod"
+
+      local seen=0
+      local existing
+      for existing in "${normalized[@]}"; do
+        if [[ "$existing" == "$mod" ]]; then
+          seen=1
+          break
+        fi
+      done
+      if [[ "$seen" -eq 0 ]]; then
+        normalized+=("$mod")
+      fi
+    done
+  done
+
+  for item in "${normalized[@]}"; do
     printf '%s\n' "$item"
   done
 }

@@ -57,7 +57,7 @@ The script follows this order:
   - Copies `icons/`, `wallpapers/`, `Fonts/`
   - Refreshes font cache (`fc-cache -fv`)
 
-- `gnome`
+- `gnome-core`
   - Installs GNOME packages: `gnome-tweaks`, `gnome-extensions-app`
   - Applies keyboard/workspace shortcuts and launcher keybinds
   - Sets fixed workspaces: `dynamic-workspaces=false`, `num-workspaces=5`
@@ -66,6 +66,8 @@ The script follows this order:
     - icon theme: `MacTahoe-dark`
     - cursor theme: `Bibata-Modern-Classic`
   - Sets wallpaper to `~/Pictures/wallpapers/background`
+
+- `gnome-extensions`
   - Installs Flatpak `com.mattjakeman.ExtensionManager`
   - Installs GNOME extensions from `Scripts/installer/data/gnome_extensions.txt`
     - primary method: GNOME Shell D-Bus install
@@ -101,6 +103,164 @@ The script follows this order:
   - Optional group add, libvirtd enable/start, default network setup
 
 Optional curated Flatpak bundle can be installed as a separate installer step.
+Legacy compatibility: `--modules=gnome` is accepted and maps to `gnome-core,gnome-extensions`.
+
+## 🔎 What Will Change On My System
+
+This section is an explicit contract of installer side effects for CachyOS/Arch and Fedora/Nobara.
+
+### `gsettings` keys changed
+
+When `gnome-core` actions are enabled, installer writes these keys:
+
+- `org.gnome.desktop.wm.keybindings move-to-workspace-1`
+- `org.gnome.desktop.wm.keybindings move-to-workspace-2`
+- `org.gnome.desktop.wm.keybindings move-to-workspace-3`
+- `org.gnome.desktop.wm.keybindings move-to-workspace-4`
+- `org.gnome.desktop.wm.keybindings move-to-workspace-5`
+- `org.gnome.desktop.wm.keybindings switch-to-workspace-1`
+- `org.gnome.desktop.wm.keybindings switch-to-workspace-2`
+- `org.gnome.desktop.wm.keybindings switch-to-workspace-3`
+- `org.gnome.desktop.wm.keybindings switch-to-workspace-4`
+- `org.gnome.desktop.wm.keybindings switch-to-workspace-5`
+- `org.gnome.mutter dynamic-workspaces`
+- `org.gnome.desktop.wm.preferences num-workspaces`
+- `org.gnome.desktop.wm.keybindings switch-windows`
+- `org.gnome.desktop.wm.keybindings switch-windows-backward`
+- `org.gnome.desktop.wm.keybindings switch-applications`
+- `org.gnome.desktop.wm.keybindings switch-applications-backward`
+- `org.gnome.desktop.interface show-battery-percentage`
+- `org.gnome.desktop.interface color-scheme`
+- `org.gnome.desktop.interface cursor-theme`
+- `org.gnome.desktop.interface icon-theme`
+- `org.gnome.settings-daemon.plugins.media-keys custom-keybindings`
+- `org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ name`
+- `org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ command`
+- `org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ binding`
+- `org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/ name`
+- `org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/ command`
+- `org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/ binding`
+- `org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/ name`
+- `org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/ command`
+- `org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/ binding`
+- `org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/ name`
+- `org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/ command`
+- `org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/ binding`
+- `org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/ name`
+- `org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/ command`
+- `org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/ binding`
+- `org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/ name`
+- `org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/ command`
+- `org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/ binding`
+- `org.gnome.desktop.wm.keybindings close`
+- `org.gnome.settings-daemon.plugins.media-keys shutdown`
+- `org.gnome.settings-daemon.plugins.media-keys reboot`
+- `org.gnome.desktop.background picture-uri`
+- `org.gnome.desktop.background picture-uri-dark`
+
+If `gnome-extensions` actions are enabled and extensions are installed, installer also tries:
+
+- `org.gnome.shell.extensions.tophat position-in-panel`
+- `org.gnome.shell.extensions.tophat cpu-display`
+- `org.gnome.shell.extensions.tophat mem-display`
+- `org.gnome.shell.extensions.tophat mem-abs-units`
+- `org.gnome.shell.extensions.tophat show-disk`
+- `org.gnome.shell.extensions.tophat show-fs`
+- `org.gnome.shell.extensions.blur-my-shell.applications blur`
+- `org.gnome.shell.extensions.blur-my-shell.applications enable-all`
+- `org.gnome.shell.extensions.blur-my-shell.applications whitelist`
+- `org.gnome.shell.extensions.blur-my-shell.applications dynamic-opacity`
+
+### Packages installed (by module)
+
+Package installation is optional in the wizard and can be disabled with `--skip-packages`.
+
+- `gnome-core`:
+  - CachyOS/Arch: `gnome-tweaks`, `gnome-extensions-app`
+  - Fedora/Nobara: `gnome-tweaks`, `gnome-extensions-app`
+- `gnome-extensions`:
+  - Flatpak app: `com.mattjakeman.ExtensionManager`
+  - GNOME extensions from `Scripts/installer/data/gnome_extensions.txt`
+  - GNOME extensions CLI dependency when needed:
+    - CachyOS/Arch: `python-pip`
+    - Fedora/Nobara: `python3-pip`
+- `terminal`:
+  - CachyOS/Arch: `fish`, `kitty`, `fastfetch`, `fzf`, `btop`, `cargo`, `fd`
+  - Fedora/Nobara: `fish`, `kitty`, `fastfetch`, `fzf`, `btop`, `cargo`, `fd-find`
+  - Rust build deps for Cargo installs:
+    - CachyOS/Arch: `openssl`, `pkgconf`, `base-devel`
+    - Fedora/Nobara: `openssl-devel`, `pkgconf-pkg-config`, `gcc`, `make`
+- `media`:
+  - CachyOS/Arch: `mpv`, `ffmpeg`, `libva-utils`, `mesa-vdpau-drivers`, `libva-intel-driver`
+  - Fedora/Nobara: `mpv`, `ffmpeg`, `libva-utils`, `libva-vdpau-driver`, `intel-media-driver`
+- `language`:
+  - CachyOS/Arch: `ibus`, `ibus-anthy`
+  - Fedora/Nobara: `ibus`, `ibus-anthy`
+- `virtualization`:
+  - CachyOS/Arch: `qemu-full`, `virt-manager`, `virt-viewer`, `dnsmasq`, `libguestfs`, `ebtables`, `vde2`, `openbsd-netcat`, `libvirt`, `edk2-ovmf`, `swtpm`
+  - Fedora/Nobara: `@virtualization`, `virt-manager`, `virt-viewer`, `libvirt`, `swtpm`
+- Flatpak support package (only if missing and Flatpak actions are selected):
+  - CachyOS/Arch: `flatpak`
+  - Fedora/Nobara: `flatpak`
+- Flatpak apps installed by installer actions:
+  - `com.mattjakeman.ExtensionManager` (`gnome-extensions` action)
+  - Curated bundle from `Scripts/installer/data/flatpaks.txt` (optional installer step)
+
+### Files and paths touched
+
+- Creates/updates:
+  - `~/.config`
+  - `~/.local/share/icons`
+  - `~/.local/share/fonts`
+  - `~/Pictures/wallpapers`
+  - `install.log` in repo root
+- Copies repo assets/config into user paths:
+  - `icons/*` -> `~/.local/share/icons/`
+  - `wallpapers/*` -> `~/Pictures/wallpapers/`
+  - `Fonts/*` -> `~/.local/share/fonts/`
+  - `fish/` -> `~/.config/fish/`
+  - `kitty/` -> `~/.config/kitty/`
+  - `fastfetch/` -> `~/.config/fastfetch/`
+  - `starship.toml` -> `~/.config/starship.toml`
+  - `mpv/` -> `~/.config/mpv/`
+- Backs up overwritten targets under:
+  - `~/.config-backups/mycachyosdotfiles_<timestamp>/...`
+- May also modify:
+  - `~/.local/bin/` (starship binary and helper symlinks such as `runin`, `cargo-install-update`, `fd`)
+  - `~/.cargo/` (Cargo-installed binaries/crates)
+  - `~/.local/share/gnome-shell/extensions/` (GNOME extension installs)
+  - `/etc/shells` (adds fish path if missing)
+  - User account shell (`chsh`)
+  - User group membership (`usermod -aG libvirt,kvm`)
+  - Libvirt service enablement and default network state
+
+### Network actions
+
+When the corresponding module/action is enabled, installer may access:
+
+- Distro package repositories via `pacman` (CachyOS/Arch) or `dnf` (Fedora/Nobara)
+- Flathub via `flatpak remote-add` and `flatpak install`
+- `starship.rs` via `curl` for Starship official installer
+- `crates.io` via `cargo install` (`cargo-update`, `runin`)
+- PyPI via `python3 -m pip install --user --upgrade gnome-extensions-cli`
+- GNOME extensions endpoints via GNOME Shell D-Bus install or `gext`
+
+### Idempotency Contract
+
+- Safe to run multiple times: yes, with caveats below.
+- Package installs:
+  - CachyOS/Arch uses `pacman -S --needed`, which skips already installed packages.
+  - Fedora/Nobara uses `dnf install -y`; already installed packages are typically left unchanged.
+- `gsettings set` is convergent: reruns set the same target values.
+- Flatpak remote add uses `--if-not-exists`; reruns do not duplicate remotes.
+- Config copy actions are convergent in content but destructive to current target tree:
+  - before overwrite, installer snapshots current target into timestamped backup dir
+  - then it replaces target with repo version
+- Known non-idempotent or side-effect caveats:
+  - each run creates a new timestamped backup directory
+  - `install.log` is recreated each run
+  - `cargo install ...`, `pip install --upgrade ...`, and network fetch/install steps may still download/rebuild/update
+  - `fc-cache -fv` and service start commands may do repeat work even when already configured
 
 ---
 
@@ -117,7 +277,7 @@ Recommended way:
 ./Scripts/install.sh
 ```
 
-GNOME module configures:
+`gnome-core` configures:
 - Traditional Alt+Tab behavior (windows, not app groups)
 - Battery percentage in top bar
 - Workspace shortcuts (`Super+1-5`, `Super+Shift+1-5`)
@@ -125,7 +285,7 @@ GNOME module configures:
 - App launchers (`Super+E`, `Super+Enter`, etc.)
 - `Super+Q` for close-window
 - Theme defaults (dark mode, icon theme, cursor theme)
-- Extension defaults (TopHat + Blur My Shell)
+- `gnome-extensions` applies extension install/enable and defaults (TopHat + Blur My Shell)
 
 Manual `gsettings` (optional, for incremental changes):
 
@@ -150,9 +310,10 @@ Shortcut mapping used:
 
 Visual style:
 
-1. Enable GNOME module in installer.
-2. Optional: customize extension UUID list in `Scripts/installer/data/gnome_extensions.txt`.
-3. Re-run GNOME module to apply updated extension list and defaults.
+1. Enable `gnome-core` in installer.
+2. Enable `gnome-extensions` for extension install/defaults.
+3. Optional: customize extension UUID list in `Scripts/installer/data/gnome_extensions.txt`.
+4. Re-run `gnome-extensions` to apply updated extension list/defaults.
 
 Included themes (`icons/`):
 

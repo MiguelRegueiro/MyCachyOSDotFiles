@@ -7,7 +7,7 @@ module_selection_wizard() {
     print_line
     log "Choose each module one by one."
     log "Press Enter to accept the default."
-    log "$(style '0;36' "Defaults: core modules enabled (base, gnome, terminal, media).")"
+    log "$(style '0;36' "Defaults: core modules enabled (base, gnome-core, gnome-extensions, terminal, media).")"
 
     local selected=()
     local i idx mod default_yes

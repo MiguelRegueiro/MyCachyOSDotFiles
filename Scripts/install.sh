@@ -50,7 +50,7 @@ main() {
 
   case "$PRESET" in
     "") ;;
-    core) MODULES_CSV="base,gnome,terminal,media" ;;
+    core) MODULES_CSV="base,gnome-core,gnome-extensions,terminal,media" ;;
     full) MODULES_CSV="" ;;
     *) die "Unknown preset: $PRESET (use core|full)" ;;
   esac
@@ -128,12 +128,20 @@ main() {
           record_module_skipped "base"
         fi
         ;;
-      gnome)
-        if [[ "$ASK_MODULE_CONFIRM" -eq 0 ]] || confirm "Run module: gnome?"; then
-          module_gnome
-          record_module_completed "gnome"
+      gnome-core)
+        if [[ "$ASK_MODULE_CONFIRM" -eq 0 ]] || confirm "Run module: gnome-core?"; then
+          module_gnome_core
+          record_module_completed "gnome-core"
         else
-          record_module_skipped "gnome"
+          record_module_skipped "gnome-core"
+        fi
+        ;;
+      gnome-extensions)
+        if [[ "$ASK_MODULE_CONFIRM" -eq 0 ]] || confirm "Run module: gnome-extensions?"; then
+          module_gnome_extensions
+          record_module_completed "gnome-extensions"
+        else
+          record_module_skipped "gnome-extensions"
         fi
         ;;
       terminal)

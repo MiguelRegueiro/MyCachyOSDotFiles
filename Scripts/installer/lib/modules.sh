@@ -3,7 +3,9 @@
 module_description() {
   case "$1" in
     base) echo "icons, wallpapers, fonts, base directories" ;;
-    gnome) echo "GNOME tweaks package, shortcuts script, wallpaper, extensions from Scripts/installer/data/gnome_extensions.txt" ;;
+    gnome-core) echo "GNOME package + core desktop settings (keybindings, workspaces, theme, wallpaper)" ;;
+    gnome-extensions) echo "GNOME extension manager, extension install/enable, and extension defaults (best effort)" ;;
+    gnome) echo "legacy alias for gnome-core + gnome-extensions" ;;
     terminal) echo "fish/kitty/starship/fastfetch setup + configs" ;;
     media) echo "mpv stack packages + mpv config" ;;
     language) echo "ibus + anthy input setup" ;;
@@ -15,7 +17,9 @@ module_description() {
 module_sudo_scope() {
   case "$1" in
     base) echo "none" ;;
-    gnome) echo "package install (optional)" ;;
+    gnome-core) echo "package install (optional)" ;;
+    gnome-extensions) echo "flatpak install (optional), optional pip dependency install" ;;
+    gnome) echo "package install (optional), flatpak install (optional), optional pip dependency install" ;;
     terminal) echo "package install (optional)" ;;
     media) echo "package install (optional)" ;;
     language) echo "package install (optional)" ;;
@@ -27,7 +31,9 @@ module_sudo_scope() {
 module_user_scope() {
   case "$1" in
     base) echo "copy icons/wallpapers/fonts, font cache refresh" ;;
-    gnome) echo "GNOME keybindings, launchers, wallpaper settings" ;;
+    gnome-core) echo "GNOME keybindings, launchers, workspaces, theme, wallpaper settings" ;;
+    gnome-extensions) echo "install/enable GNOME extensions and apply extension defaults (best effort)" ;;
+    gnome) echo "legacy alias: runs gnome-core and gnome-extensions" ;;
     terminal) echo "copy configs, chsh, cargo install" ;;
     media) echo "copy mpv config" ;;
     language) echo "start ibus daemon" ;;
@@ -36,80 +42,122 @@ module_user_scope() {
   esac
 }
 
+gsettings_key_supported() {
+  local schema="$1"
+  local key="$2"
+  local schema_dir="${3:-}"
+
+  local out=""
+  if [[ -n "$schema_dir" ]]; then
+    out="$(gsettings --schemadir "$schema_dir" writable "$schema" "$key" 2>/dev/null || true)"
+  else
+    out="$(gsettings writable "$schema" "$key" 2>/dev/null || true)"
+  fi
+
+  case "$out" in
+    true|false) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+set_gsettings_safe() {
+  local schema="$1"
+  local key="$2"
+  local value="$3"
+  local schema_dir="${4:-}"
+
+  if ! gsettings_key_supported "$schema" "$key" "$schema_dir"; then
+    if [[ -n "$schema_dir" ]]; then
+      warn "Skipping gsettings set; missing schema/key: schema='$schema' key='$key' schemadir='$schema_dir'"
+    else
+      warn "Skipping gsettings set; missing schema/key: schema='$schema' key='$key'"
+    fi
+    record_skipped "gsettings-missing:$schema:$key"
+    return 0
+  fi
+
+  if [[ -n "$schema_dir" ]]; then
+    run_cmd_soft "gsettings --schemadir \"$schema_dir\" set \"$schema\" \"$key\" $value" || true
+  else
+    run_cmd_soft "gsettings set \"$schema\" \"$key\" $value" || true
+  fi
+  return 0
+}
+
 apply_gnome_shortcuts_from_installer() {
   local wm_schema="org.gnome.desktop.wm.keybindings"
   local media_schema="org.gnome.settings-daemon.plugins.media-keys"
   local base_path="/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings"
 
   # Workspace move shortcuts (Super+Shift+1..5)
-  run_cmd "gsettings set $wm_schema move-to-workspace-1 \"['<Shift><Super>1']\""
-  run_cmd "gsettings set $wm_schema move-to-workspace-2 \"['<Shift><Super>2']\""
-  run_cmd "gsettings set $wm_schema move-to-workspace-3 \"['<Shift><Super>3']\""
-  run_cmd "gsettings set $wm_schema move-to-workspace-4 \"['<Shift><Super>4']\""
-  run_cmd "gsettings set $wm_schema move-to-workspace-5 \"['<Shift><Super>5']\""
+  set_gsettings_safe "$wm_schema" "move-to-workspace-1" "\"['<Shift><Super>1']\""
+  set_gsettings_safe "$wm_schema" "move-to-workspace-2" "\"['<Shift><Super>2']\""
+  set_gsettings_safe "$wm_schema" "move-to-workspace-3" "\"['<Shift><Super>3']\""
+  set_gsettings_safe "$wm_schema" "move-to-workspace-4" "\"['<Shift><Super>4']\""
+  set_gsettings_safe "$wm_schema" "move-to-workspace-5" "\"['<Shift><Super>5']\""
 
   # Workspace switch shortcuts (Super+1..5)
-  run_cmd "gsettings set $wm_schema switch-to-workspace-1 \"['<Super>1']\""
-  run_cmd "gsettings set $wm_schema switch-to-workspace-2 \"['<Super>2']\""
-  run_cmd "gsettings set $wm_schema switch-to-workspace-3 \"['<Super>3']\""
-  run_cmd "gsettings set $wm_schema switch-to-workspace-4 \"['<Super>4']\""
-  run_cmd "gsettings set $wm_schema switch-to-workspace-5 \"['<Super>5']\""
+  set_gsettings_safe "$wm_schema" "switch-to-workspace-1" "\"['<Super>1']\""
+  set_gsettings_safe "$wm_schema" "switch-to-workspace-2" "\"['<Super>2']\""
+  set_gsettings_safe "$wm_schema" "switch-to-workspace-3" "\"['<Super>3']\""
+  set_gsettings_safe "$wm_schema" "switch-to-workspace-4" "\"['<Super>4']\""
+  set_gsettings_safe "$wm_schema" "switch-to-workspace-5" "\"['<Super>5']\""
   # Use a fixed workspace count instead of GNOME dynamic workspaces.
-  run_cmd "gsettings set org.gnome.mutter dynamic-workspaces false"
-  run_cmd "gsettings set org.gnome.desktop.wm.preferences num-workspaces 5"
+  set_gsettings_safe "org.gnome.mutter" "dynamic-workspaces" "false"
+  set_gsettings_safe "org.gnome.desktop.wm.preferences" "num-workspaces" "5"
 
   # Traditional Alt+Tab behavior
-  run_cmd "gsettings set $wm_schema switch-windows \"['<Alt>Tab']\""
-  run_cmd "gsettings set $wm_schema switch-windows-backward \"['<Shift><Alt>Tab']\""
-  run_cmd "gsettings set $wm_schema switch-applications \"[]\""
-  run_cmd "gsettings set $wm_schema switch-applications-backward \"[]\""
+  set_gsettings_safe "$wm_schema" "switch-windows" "\"['<Alt>Tab']\""
+  set_gsettings_safe "$wm_schema" "switch-windows-backward" "\"['<Shift><Alt>Tab']\""
+  set_gsettings_safe "$wm_schema" "switch-applications" "\"[]\""
+  set_gsettings_safe "$wm_schema" "switch-applications-backward" "\"[]\""
 
   # Battery percentage
-  run_cmd "gsettings set org.gnome.desktop.interface show-battery-percentage true"
+  set_gsettings_safe "org.gnome.desktop.interface" "show-battery-percentage" "true"
   # Prefer dark appearance for GNOME-supported apps/themes.
-  run_cmd "gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'"
+  set_gsettings_safe "org.gnome.desktop.interface" "color-scheme" "'prefer-dark'"
   # Theme defaults
-  run_cmd "gsettings set org.gnome.desktop.interface cursor-theme 'Bibata-Modern-Classic'"
-  run_cmd "gsettings set org.gnome.desktop.interface icon-theme 'MacTahoe-dark'"
+  set_gsettings_safe "org.gnome.desktop.interface" "cursor-theme" "'Bibata-Modern-Classic'"
+  set_gsettings_safe "org.gnome.desktop.interface" "icon-theme" "'MacTahoe-dark'"
 
   # Custom launcher slots
-  run_cmd "gsettings set $media_schema custom-keybindings \"['$base_path/custom0/', '$base_path/custom1/', '$base_path/custom2/', '$base_path/custom3/', '$base_path/custom4/', '$base_path/custom5/']\""
+  set_gsettings_safe "$media_schema" "custom-keybindings" "\"['$base_path/custom0/', '$base_path/custom1/', '$base_path/custom2/', '$base_path/custom3/', '$base_path/custom4/', '$base_path/custom5/']\""
 
   # Super+E: Files
-  run_cmd "gsettings set ${media_schema}.custom-keybinding:$base_path/custom0/ name 'files'"
-  run_cmd "gsettings set ${media_schema}.custom-keybinding:$base_path/custom0/ command 'nautilus --new-window'"
-  run_cmd "gsettings set ${media_schema}.custom-keybinding:$base_path/custom0/ binding '<Super>e'"
+  set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom0/" "name" "'files'"
+  set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom0/" "command" "'nautilus --new-window'"
+  set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom0/" "binding" "'<Super>e'"
 
   # Super+Enter: Kitty
-  run_cmd "gsettings set ${media_schema}.custom-keybinding:$base_path/custom1/ name 'kitty'"
-  run_cmd "gsettings set ${media_schema}.custom-keybinding:$base_path/custom1/ command 'kitty'"
-  run_cmd "gsettings set ${media_schema}.custom-keybinding:$base_path/custom1/ binding '<Super>Return'"
+  set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom1/" "name" "'kitty'"
+  set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom1/" "command" "'kitty'"
+  set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom1/" "binding" "'<Super>Return'"
 
   # Super+R: Btop
-  run_cmd "gsettings set ${media_schema}.custom-keybinding:$base_path/custom2/ name 'btop'"
-  run_cmd "gsettings set ${media_schema}.custom-keybinding:$base_path/custom2/ command 'kitty -e btop'"
-  run_cmd "gsettings set ${media_schema}.custom-keybinding:$base_path/custom2/ binding '<Super>r'"
+  set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom2/" "name" "'btop'"
+  set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom2/" "command" "'kitty -e btop'"
+  set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom2/" "binding" "'<Super>r'"
 
   # Super+B: Zen Browser
-  run_cmd "gsettings set ${media_schema}.custom-keybinding:$base_path/custom3/ name 'zen'"
-  run_cmd "gsettings set ${media_schema}.custom-keybinding:$base_path/custom3/ command 'flatpak run app.zen_browser.zen'"
-  run_cmd "gsettings set ${media_schema}.custom-keybinding:$base_path/custom3/ binding '<Super>b'"
+  set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom3/" "name" "'zen'"
+  set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom3/" "command" "'flatpak run app.zen_browser.zen'"
+  set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom3/" "binding" "'<Super>b'"
 
   # Super+F9: NormCap
-  run_cmd "gsettings set ${media_schema}.custom-keybinding:$base_path/custom4/ name 'Ocr'"
-  run_cmd "gsettings set ${media_schema}.custom-keybinding:$base_path/custom4/ command '/usr/bin/flatpak run com.github.dynobo.normcap'"
-  run_cmd "gsettings set ${media_schema}.custom-keybinding:$base_path/custom4/ binding '<Super>F9'"
+  set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom4/" "name" "'Ocr'"
+  set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom4/" "command" "'/usr/bin/flatpak run com.github.dynobo.normcap'"
+  set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom4/" "binding" "'<Super>F9'"
 
   # Super+ç: Runin in Kitty
-  run_cmd "gsettings set ${media_schema}.custom-keybinding:$base_path/custom5/ name 'runin'"
-  run_cmd "gsettings set ${media_schema}.custom-keybinding:$base_path/custom5/ command 'kitty -e runin'"
-  run_cmd "gsettings set ${media_schema}.custom-keybinding:$base_path/custom5/ binding '<Super>ccedilla'"
+  set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom5/" "name" "'runin'"
+  set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom5/" "command" "'kitty -e runin'"
+  set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom5/" "binding" "'<Super>ccedilla'"
 
   # Super+Q close window
-  run_cmd "gsettings set $wm_schema close \"['<Super>q']\""
+  set_gsettings_safe "$wm_schema" "close" "\"['<Super>q']\""
   # Power actions
-  run_cmd "gsettings set org.gnome.settings-daemon.plugins.media-keys shutdown \"['<Shift><Super>l']\""
-  run_cmd "gsettings set org.gnome.settings-daemon.plugins.media-keys reboot \"['<Shift><Super>p']\""
+  set_gsettings_safe "org.gnome.settings-daemon.plugins.media-keys" "shutdown" "\"['<Shift><Super>l']\""
+  set_gsettings_safe "org.gnome.settings-daemon.plugins.media-keys" "reboot" "\"['<Shift><Super>p']\""
 }
 
 ensure_base_dirs() {
@@ -487,10 +535,11 @@ is_gnome_session() {
 
 set_gnome_wallpaper() {
   local src="$HOME/Pictures/wallpapers/background"
+  local schema="org.gnome.desktop.background"
   if [[ "$DRY_RUN" -eq 1 ]]; then
     local uri="file://$src"
-    run_cmd "gsettings set org.gnome.desktop.background picture-uri \"$uri\""
-    run_cmd "gsettings set org.gnome.desktop.background picture-uri-dark \"$uri\""
+    set_gsettings_safe "$schema" "picture-uri" "\"$uri\""
+    set_gsettings_safe "$schema" "picture-uri-dark" "\"$uri\""
     return 0
   fi
 
@@ -500,8 +549,8 @@ set_gnome_wallpaper() {
   fi
 
   local uri="file://$src"
-  run_cmd "gsettings set org.gnome.desktop.background picture-uri \"$uri\""
-  run_cmd "gsettings set org.gnome.desktop.background picture-uri-dark \"$uri\""
+  set_gsettings_safe "$schema" "picture-uri" "\"$uri\""
+  set_gsettings_safe "$schema" "picture-uri-dark" "\"$uri\""
 }
 
 module_base() {
@@ -628,20 +677,27 @@ module_virtualization() {
   fi
 }
 
-module_gnome() {
-  print_section "Module: gnome"
-  install_packages "gnome" gnome-tweaks gnome-extensions-app || true
+module_gnome_core() {
+  print_section "Module: gnome-core"
+  install_packages "gnome-core" gnome-tweaks gnome-extensions-app || true
 
   if ! is_gnome_session; then
     warn "GNOME session not detected. GNOME-specific actions may fail."
   fi
 
   if confirm_action "Apply GNOME keybindings/shortcuts from installer"; then
-    apply_gnome_shortcuts_from_installer
+    apply_gnome_shortcuts_from_installer || true
   fi
 
   if confirm_action "Set GNOME wallpaper to ~/Pictures/wallpapers/background"; then
     set_gnome_wallpaper || true
+  fi
+}
+
+module_gnome_extensions() {
+  print_section "Module: gnome-extensions"
+  if ! is_gnome_session; then
+    warn "GNOME session not detected. Extension install/default actions may fail."
   fi
 
   if confirm_action "Install GNOME Extension Manager (Flatpak)"; then
@@ -659,4 +715,10 @@ module_gnome() {
   if confirm_action "Configure Blur My Shell defaults (Kitty/Nautilus blur, no opaque focused window)"; then
     configure_blur_my_shell_defaults || true
   fi
+}
+
+module_gnome() {
+  warn "Module 'gnome' is a legacy alias. Running gnome-core and gnome-extensions."
+  module_gnome_core
+  module_gnome_extensions
 }
