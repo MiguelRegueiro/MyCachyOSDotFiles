@@ -107,6 +107,9 @@ apply_gnome_shortcuts_from_installer() {
 
   # Super+Q close window
   run_cmd "gsettings set $wm_schema close \"['<Super>q']\""
+  # Power actions
+  run_cmd "gsettings set org.gnome.settings-daemon.plugins.media-keys shutdown \"['<Shift><Super>l']\""
+  run_cmd "gsettings set org.gnome.settings-daemon.plugins.media-keys reboot \"['<Shift><Super>p']\""
 }
 
 ensure_base_dirs() {
