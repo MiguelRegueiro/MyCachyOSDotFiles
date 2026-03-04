@@ -3,7 +3,6 @@ com.discordapp.Discord
 com.github.dynobo.normcap
 com.github.iwalton3.jellyfin-media-player
 com.github.fabiocolacio.marker
-com.mattjakeman.ExtensionManager
 com.rtosta.zapzap
 net.mkiol.SpeechNote
 net.ankiweb.Anki

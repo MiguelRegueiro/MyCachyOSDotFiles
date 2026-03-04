@@ -264,6 +264,31 @@ run_cmd() {
   return 1
 }
 
+run_cmd_soft() {
+  local cmd="$1"
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    log "[DRY-RUN] $cmd"
+    record_completed "dry-run:$cmd"
+    return 0
+  fi
+
+  if [[ "$ASSUME_YES" -eq 0 && "$ASK_EACH_CMD" -eq 1 ]]; then
+    if ! confirm_cmd "user" "$cmd"; then
+      log "[SKIP] $cmd"
+      record_skipped "cmd:$cmd"
+      return 0
+    fi
+  fi
+
+  log "[RUN] $cmd"
+  if bash -c "$cmd" 2>&1 | tee -a "$LOG_FILE"; then
+    record_completed "cmd:$cmd"
+    return 0
+  fi
+  warn "Command failed (continuing): $cmd"
+  return 1
+}
+
 run_root_cmd() {
   local cmd="$1"
   if [[ "$ROOT_ACTIONS_ALLOWED" -eq 0 ]]; then

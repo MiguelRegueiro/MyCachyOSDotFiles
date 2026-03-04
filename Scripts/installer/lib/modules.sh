@@ -67,7 +67,7 @@ apply_gnome_shortcuts_from_installer() {
   run_cmd "gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'"
   # Theme defaults
   run_cmd "gsettings set org.gnome.desktop.interface cursor-theme 'Bibata-Modern-Classic'"
-  run_cmd "gsettings set org.gnome.desktop.interface icon-theme 'MacTahoe-Dark'"
+  run_cmd "gsettings set org.gnome.desktop.interface icon-theme 'MacTahoe-dark'"
 
   # Custom launcher slots
   run_cmd "gsettings set $media_schema custom-keybindings \"['$base_path/custom0/', '$base_path/custom1/', '$base_path/custom2/', '$base_path/custom3/', '$base_path/custom4/', '$base_path/custom5/']\""
@@ -150,6 +150,16 @@ install_flatpak_bundle() {
   record_completed "flatpak:bundle"
 }
 
+install_gnome_extension_manager_flatpak() {
+  if ! ensure_flatpak_available; then
+    warn "Flatpak unavailable; cannot install GNOME Extension Manager."
+    return 1
+  fi
+  run_cmd "flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo"
+  run_cmd "flatpak install -y flathub com.mattjakeman.ExtensionManager"
+  record_completed "flatpak:gnome-extension-manager"
+}
+
 install_gnome_extensions_bundle() {
   local ext_file="$INSTALLER_ROOT/data/gnome_extensions.txt"
   # Backward compatibility if old path is still used in local setup.
@@ -208,7 +218,7 @@ install_gnome_extensions_bundle() {
     local preinstalled_uuid missing_count=0
     for preinstalled_uuid in "${uuids[@]}"; do
       if gnome-extensions info "$preinstalled_uuid" >/dev/null 2>&1; then
-        run_cmd "gnome-extensions enable \"$preinstalled_uuid\"" || true
+        run_cmd_soft "gnome-extensions enable \"$preinstalled_uuid\"" || true
       else
         missing_count=$((missing_count + 1))
       fi
@@ -224,9 +234,9 @@ install_gnome_extensions_bundle() {
   for uuid in "${uuids[@]}"; do
     # Prefer filesystem backend to avoid interactive Shell dialog prompts.
     if run_cmd "\"$gext_cmd\" --filesystem install \"$uuid\""; then
-      run_cmd "gnome-extensions enable \"$uuid\"" || true
+      run_cmd_soft "gnome-extensions enable \"$uuid\"" || true
     elif run_cmd "\"$gext_cmd\" install \"$uuid\""; then
-      run_cmd "gnome-extensions enable \"$uuid\"" || true
+      run_cmd_soft "gnome-extensions enable \"$uuid\"" || true
     else
       warn "Failed to install extension: $uuid"
       record_failed "gnome-extension:$uuid"
@@ -288,7 +298,18 @@ ensure_starship_available() {
     return 0
   fi
 
-  warn "starship binary not found in system packages; trying cargo fallback."
+  log "starship not found. Trying distro package first..."
+  if [[ "$PKG_KIND" == "arch" ]]; then
+    install_packages "terminal-starship" starship || true
+  elif [[ "$PKG_KIND" == "fedora" ]]; then
+    run_root_cmd_soft "dnf install -y starship" || true
+  fi
+
+  if command -v starship >/dev/null 2>&1; then
+    return 0
+  fi
+
+  warn "starship package unavailable; trying cargo fallback."
   if ! command -v cargo >/dev/null 2>&1; then
     warn "cargo is unavailable; cannot install starship fallback."
     return 1
@@ -296,6 +317,19 @@ ensure_starship_available() {
 
   ensure_rust_build_deps
   run_cmd "cargo install starship --locked"
+
+  if [[ -x "$HOME/.cargo/bin/starship" ]]; then
+    run_cmd "mkdir -p \"$HOME/.local/bin\""
+    run_cmd "ln -sf \"$HOME/.cargo/bin/starship\" \"$HOME/.local/bin/starship\""
+  fi
+
+  if command -v starship >/dev/null 2>&1 || [[ -x "$HOME/.local/bin/starship" ]] || [[ -x "$HOME/.cargo/bin/starship" ]]; then
+    record_completed "terminal:starship-installed"
+    return 0
+  fi
+
+  warn "starship installation did not produce a runnable binary."
+  return 1
 }
 
 is_gnome_session() {
@@ -382,7 +416,9 @@ module_terminal() {
     fi
   fi
 
-  ensure_starship_available || true
+  if ! ensure_starship_available; then
+    record_failed "terminal:starship"
+  fi
 }
 
 module_media() {
@@ -459,6 +495,10 @@ module_gnome() {
 
   if confirm_action "Set GNOME wallpaper to ~/Pictures/wallpapers/background"; then
     set_gnome_wallpaper || true
+  fi
+
+  if confirm_action "Install GNOME Extension Manager (Flatpak)"; then
+    install_gnome_extension_manager_flatpak || true
   fi
 
   if confirm_action "Install GNOME extensions from Scripts/installer/data/gnome_extensions.txt"; then
