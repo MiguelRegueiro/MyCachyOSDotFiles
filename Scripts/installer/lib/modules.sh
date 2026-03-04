@@ -54,6 +54,9 @@ apply_gnome_shortcuts_from_installer() {
   run_cmd "gsettings set $wm_schema switch-to-workspace-3 \"['<Super>3']\""
   run_cmd "gsettings set $wm_schema switch-to-workspace-4 \"['<Super>4']\""
   run_cmd "gsettings set $wm_schema switch-to-workspace-5 \"['<Super>5']\""
+  # Use a fixed workspace count instead of GNOME dynamic workspaces.
+  run_cmd "gsettings set org.gnome.mutter dynamic-workspaces false"
+  run_cmd "gsettings set org.gnome.desktop.wm.preferences num-workspaces 5"
 
   # Traditional Alt+Tab behavior
   run_cmd "gsettings set $wm_schema switch-windows \"['<Alt>Tab']\""
@@ -256,6 +259,76 @@ install_gnome_extensions_bundle() {
   fi
 
   record_completed "gnome-extensions:bundle"
+}
+
+configure_tophat_defaults() {
+  local schema_dir="$HOME/.local/share/gnome-shell/extensions/tophat@fflewddur.github.io/schemas"
+  local schema="org.gnome.shell.extensions.tophat"
+
+  if [[ ! -d "$schema_dir" ]]; then
+    warn "TopHat schema directory not found; skipping TopHat defaults."
+    return 1
+  fi
+
+  local keys
+  if ! keys="$(gsettings --schemadir "$schema_dir" list-keys "$schema" 2>/dev/null)"; then
+    warn "TopHat schema not readable; skipping TopHat defaults."
+    return 1
+  fi
+
+  if echo "$keys" | grep -qx "position-in-panel"; then
+    run_cmd_soft "gsettings --schemadir \"$schema_dir\" set \"$schema\" position-in-panel 'left'" || true
+  fi
+  if echo "$keys" | grep -qx "cpu-display"; then
+    run_cmd_soft "gsettings --schemadir \"$schema_dir\" set \"$schema\" cpu-display 'numeric'" || true
+  fi
+  if echo "$keys" | grep -qx "mem-display"; then
+    run_cmd_soft "gsettings --schemadir \"$schema_dir\" set \"$schema\" mem-display 'numeric'" || true
+  fi
+  if echo "$keys" | grep -qx "mem-abs-units"; then
+    run_cmd_soft "gsettings --schemadir \"$schema_dir\" set \"$schema\" mem-abs-units true" || true
+  fi
+  if echo "$keys" | grep -qx "show-disk"; then
+    run_cmd_soft "gsettings --schemadir \"$schema_dir\" set \"$schema\" show-disk false" || true
+  fi
+  if echo "$keys" | grep -qx "show-fs"; then
+    run_cmd_soft "gsettings --schemadir \"$schema_dir\" set \"$schema\" show-fs false" || true
+  fi
+
+  record_completed "gnome:tophat-defaults"
+  return 0
+}
+
+configure_blur_my_shell_defaults() {
+  local schema_dir="$HOME/.local/share/gnome-shell/extensions/blur-my-shell@aunetx/schemas"
+  local schema="org.gnome.shell.extensions.blur-my-shell.applications"
+
+  if [[ ! -d "$schema_dir" ]]; then
+    warn "Blur My Shell schema directory not found; skipping Blur My Shell defaults."
+    return 1
+  fi
+
+  local keys
+  if ! keys="$(gsettings --schemadir "$schema_dir" list-keys "$schema" 2>/dev/null)"; then
+    warn "Blur My Shell schema not readable; skipping Blur My Shell defaults."
+    return 1
+  fi
+
+  if echo "$keys" | grep -qx "blur"; then
+    run_cmd_soft "gsettings --schemadir \"$schema_dir\" set \"$schema\" blur true" || true
+  fi
+  if echo "$keys" | grep -qx "enable-all"; then
+    run_cmd_soft "gsettings --schemadir \"$schema_dir\" set \"$schema\" enable-all false" || true
+  fi
+  if echo "$keys" | grep -qx "whitelist"; then
+    run_cmd_soft "gsettings --schemadir \"$schema_dir\" set \"$schema\" whitelist \"['kitty', 'org.gnome.Nautilus']\"" || true
+  fi
+  if echo "$keys" | grep -qx "dynamic-opacity"; then
+    run_cmd_soft "gsettings --schemadir \"$schema_dir\" set \"$schema\" dynamic-opacity false" || true
+  fi
+
+  record_completed "gnome:blur-my-shell-defaults"
+  return 0
 }
 
 set_default_fish_shell_if_available() {
@@ -498,5 +571,13 @@ module_gnome() {
 
   if confirm_action "Install GNOME extensions from Scripts/installer/data/gnome_extensions.txt"; then
     install_gnome_extensions_bundle || true
+  fi
+
+  if confirm_action "Configure TopHat defaults (left panel, CPU %, RAM GB, hide disk)"; then
+    configure_tophat_defaults || true
+  fi
+
+  if confirm_action "Configure Blur My Shell defaults (Kitty/Nautilus blur, no opaque focused window)"; then
+    configure_blur_my_shell_defaults || true
   fi
 }
