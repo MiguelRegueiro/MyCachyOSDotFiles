@@ -10,21 +10,19 @@
 //        }
 //    },                          
 
-        "logo": {
-      "type": "kitty",
-      "source": "/home/regueiro/.config/fastfetch/CachyOS3.png",
-      "width":38,
-      "padding": {
-      "top": 3,
-      "left": 2,
-      "right": 2,
-      }
-    },
-    "modules": [
-        "break",
-
-        {
-            "type": "host",
+	        "logo": {
+	      "type": "kitty",
+	      "source": "/home/regueiro/.config/fastfetch/CachyOS3.png",
+	      "width":38,
+	      "padding": {
+	      "top": 0,
+	      "left": 2,
+	      "right": 2,
+	      }
+	    },
+	    "modules": [
+	        {
+	            "type": "host",
             "key": "PC",
             "keyColor": "#04b4e0"
         },

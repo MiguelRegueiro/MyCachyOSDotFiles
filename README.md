@@ -16,93 +16,118 @@ This setup is tailored for CachyOS, but many parts work on other Arch-based syst
 
 ---
 
-## 📖 Table of Contents
-
-- [🚀 Quick Start](#-quick-start)
-- [🧱 Base](#-base)
-  - [GNOME Desktop Environment](#gnome-desktop-environment)
-  - [Terminal & CLI Tools](#terminal--cli-tools)
-  - [Software & Applications](#software--applications)
-  - [Connectivity](#connectivity)
-- [🟦 CachyOS](#-cachyos)
-  - [System Optimization & Monitoring](#system-optimization--monitoring)
-  - [Hardware & Storage](#hardware--storage)
-- [🎮 HP Omen](#-hp-omen)
-- [ℹ️ Reference](#-reference)
-  - [License & Third-Party Assets](#-license--third-party-assets)
-
----
-
-## 🚀 Quick Start
-
-Get up and running quickly with these steps.
-
-Recommended (guided installer; run and choose what to apply):
+## 🚀 Install
 
 ```bash
+git clone https://github.com/MiguelRegueiro/MyCachyOSDotFiles
+cd MyCachyOSDotFiles
 ./Scripts/install.sh
 ```
 
-For test/preview mode (no changes):
+Test mode (no changes):
 
 ```bash
 ./Scripts/install.sh --dry-run
 ```
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/MiguelRegueiro/MyCachyOSDotFiles
-   cd MyCachyOSDotFiles
-   ```
+The installer is the main entrypoint for this repo. Manual commands are optional and mainly useful for fine-tuning.
 
-2. Install prerequisite tools:
-   ```bash
-   sudo pacman -S gnome-tweaks
-   ```
+## 🧭 Installer Workflow (What It Does)
 
-3. Run the automated GNOME shortcut script:
-   ```bash
-   ./Scripts/set_window_workspace_shortcuts.sh
-   ```
+The script follows this order:
 
-4. Install themes and icons:
-   ```bash
-   mkdir -p ~/.local/share/icons
-   cp -r icons/* ~/.local/share/icons/
-   ```
+1. Detect distro (Fedora vs Arch-based/CachyOS package mapping).
+2. Guided setup asks:
+   - dry-run or real run
+   - whether package installs are allowed
+   - whether curated Flatpaks should be installed
+   - which modules to run
+3. Shows a plan summary.
+4. If root actions are needed:
+   - requests sudo once (`sudo -v`)
+   - keeps sudo session alive during run
+5. Runs selected modules.
+6. Backs up existing files before overwriting config.
+7. Prints final summary (`completed / skipped / failed`) and backup/log paths.
 
-5. Copy configuration files:
-   ```bash
-   cp -r kitty/ ~/.config/
-   cp -r fish/ ~/.config/
-   cp -r fastfetch/ ~/.config/
-   cp starship.toml ~/.config/
-   cp -r mpv/ ~/.config/
-   ```
+### Modules
+
+- `base`
+  - Creates `~/.config`, icon/font dirs, wallpaper dir
+  - Copies `icons/`, `wallpapers/`, `Fonts/`
+  - Refreshes font cache (`fc-cache -fv`)
+
+- `gnome`
+  - Installs GNOME packages: `gnome-tweaks`, `gnome-extensions-app`
+  - Applies keyboard/workspace shortcuts and launcher keybinds
+  - Sets fixed workspaces: `dynamic-workspaces=false`, `num-workspaces=5`
+  - Sets GNOME look defaults:
+    - dark mode (`prefer-dark`)
+    - icon theme: `MacTahoe-dark`
+    - cursor theme: `Bibata-Modern-Classic`
+  - Sets wallpaper to `~/Pictures/wallpapers/background`
+  - Installs Flatpak `com.mattjakeman.ExtensionManager`
+  - Installs GNOME extensions from `Scripts/installer/data/gnome_extensions.txt`
+    - primary method: GNOME Shell D-Bus install
+    - fallback: `gext` (`gnome-extensions-cli`)
+    - then enables each extension
+  - Applies extension defaults:
+    - TopHat: left panel, numeric CPU/RAM, RAM absolute units, hide disk/fs
+    - Blur My Shell: blur apps enabled, whitelist `kitty` + `org.gnome.Nautilus`, opaque focused window disabled
+
+- `terminal`
+  - Installs packages: `fish`, `kitty`, `fastfetch`, `fzf`, `btop`, `cargo`
+  - Copies configs: `fish/`, `kitty/`, `fastfetch/`, `starship.toml`
+  - Sets Fish as default shell
+  - Sets distro-aware Fish `up` abbreviation:
+    - Fedora-like: `dnf upgrade + flatpak update + cargo install-update -a`
+    - Arch/CachyOS: `paru -Syu + flatpak update + cargo install-update -a + limine-snapper-sync`
+  - Installs:
+    - `cargo-update` (`cargo install cargo-update`)
+    - `runin` (`cargo install runin`)
+    - Starship via official installer:
+      `curl -sS https://starship.rs/install.sh | sh -s -- -y -b "$HOME/.local/bin"`
+
+- `media`
+  - Installs media packages (Fedora/Arch-specific mapping)
+  - Copies MPV config
+
+- `language`
+  - Installs `ibus` + `ibus-anthy`
+  - Optional `ibus-daemon -drx`
+
+- `virtualization`
+  - Installs libvirt/QEMU stack (Fedora/Arch-specific mapping)
+  - Optional group add, libvirtd enable/start, default network setup
+
+Optional curated Flatpak bundle can be installed as a separate installer step.
 
 ---
 
-## 🧱 Base
+## 🧱 Detailed Configs
 
 ### GNOME Desktop Environment
 
 <details>
 <summary><strong>Show section</strong></summary>
 
-Use the automation script:
+Recommended way:
 
 ```bash
-./Scripts/set_window_workspace_shortcuts.sh
+./Scripts/install.sh
 ```
 
-It configures:
+GNOME module configures:
 - Traditional Alt+Tab behavior (windows, not app groups)
 - Battery percentage in top bar
 - Workspace shortcuts (`Super+1-5`, `Super+Shift+1-5`)
+- Fixed 5 workspaces (dynamic workspaces disabled)
 - App launchers (`Super+E`, `Super+Enter`, etc.)
 - `Super+Q` for close-window
+- Theme defaults (dark mode, icon theme, cursor theme)
+- Extension defaults (TopHat + Blur My Shell)
 
-Manual `gsettings` (optional):
+Manual `gsettings` (optional, for incremental changes):
 
 ```bash
 gsettings set org.gnome.desktop.wm.keybindings switch-windows "['<Alt>Tab']"
@@ -125,18 +150,15 @@ Shortcut mapping used:
 
 Visual style:
 
-1. Install `gnome-tweaks`:
-   ```bash
-   sudo pacman -S gnome-tweaks
-   ```
-2. Enable the **User Themes** extension in `gnome-extensions-app`.
-3. Optional: add GNOME extension UUIDs (one per line) in `Scripts/installer/data/gnome_extensions.txt`; the installer can install/enable them.
+1. Enable GNOME module in installer.
+2. Optional: customize extension UUID list in `Scripts/installer/data/gnome_extensions.txt`.
+3. Re-run GNOME module to apply updated extension list and defaults.
 
 Included themes (`icons/`):
 
 | Component  | Theme                 | Installation |
 | ---------- | --------------------- | ------------ |
-| Icon Theme | MacTahoe              | Copy to `~/.local/share/icons/` |
+| Icon Theme | MacTahoe-dark         | Copy to `~/.local/share/icons/` |
 | Cursor     | Bibata-Modern-Classic | Copy to `~/.local/share/icons/` |
 
 Install icons:
@@ -175,23 +197,28 @@ GNOME extensions / Blur My Shell preview:
 <details>
 <summary><strong>Show section</strong></summary>
 
-This setup uses Kitty + Fish + Starship + Fastfetch.
+This setup uses Kitty + Fish + Starship + Fastfetch. The installer handles package installation and config copy.
 
 - Kitty
   - Config: `~/.config/kitty/kitty.conf`
   - Highlights: Wayland support, transparency/blur, borderless window, font resize shortcuts
 - Fish
-  - Install: `sudo pacman -S fish`
   - Set default shell: `chsh -s /usr/bin/fish`
   - Config: `~/.config/fish/config.fish`
   - Includes `fzf` key bindings and `up` abbreviation
   - Rust CLI updater used by `up`: `cargo install cargo-update` (adds `cargo install-update -a` to update installed Cargo binaries in one command)
 - Starship
-  - Install: `curl -sS https://starship.rs/install.sh | sh`
+  - Install (official): `curl -sS https://starship.rs/install.sh | sh -s -- -y -b "$HOME/.local/bin"`
   - Config: `~/.config/starship.toml`
 - Fastfetch
-  - Install: `sudo pacman -S fastfetch`
   - Config: `~/.config/fastfetch/config.jsonc`
+
+Distro notes:
+
+- Fish `up` abbreviation is distro-aware in this repo and works out-of-the-box for both Fedora-like and Arch/CachyOS systems.
+- CachyOS/Arch path includes `sudo limine-snapper-sync`; Fedora path does not.
+- Fastfetch image/logo in this setup is CachyOS-themed.
+- If you are not on CachyOS, update `~/.config/fastfetch/config.jsonc` logo/image to match your distro.
 
 </details>
 
@@ -201,6 +228,10 @@ This setup uses Kitty + Fish + Starship + Fastfetch.
 <summary><strong>Show section</strong></summary>
 
 Virtualization (QEMU/KVM):
+
+Recommended: enable the `virtualization` module in installer.
+
+Manual path (Arch example):
 
 1. Install packages:
    ```bash
@@ -228,7 +259,7 @@ Utilities, media, language:
   - Install: `flatpak install flathub com.github.dynobo.normcap`
   - Launch shortcut in this setup: `Super+F9`
 - MPV immersion config
-  - Install dependencies:
+  - Install dependencies (Arch example):
     ```bash
     sudo pacman -S mpv ffmpeg
     sudo pacman -S libva-intel-driver libva-utils mesa-vdpau-drivers
@@ -238,7 +269,7 @@ Utilities, media, language:
     cp -r mpv/ ~/.config/
     ```
 - Japanese input (IBus + Anthy)
-  - Install: `sudo pacman -S ibus-anthy ibus`
+  - Install (Arch example): `sudo pacman -S ibus-anthy ibus`
   - Add method in `ibus-setup`
   - Start daemon: `ibus-daemon -drx`
 
@@ -369,10 +400,10 @@ Included helper script:
 ### How to Use This Repo
 
 1. Clone: `git clone https://github.com/MiguelRegueiro/MyCachyOSDotFiles`
-2. Copy desired configs to `~/.config/` based on the section you want (`Base`, `CachyOS`, `HP Omen`).
+2. Run `./Scripts/install.sh` and select the modules you want.
 3. Keep private values local (for example personal SSH aliases) instead of committing them.
-4. Apply GNOME settings using scripts or manual commands.
-5. Install only the tools you need.
+4. Re-run installer anytime; existing config is backed up before overwrite.
+5. Use `--dry-run` to test changes before applying.
 
 ### 📄 License & Third-Party Assets
 
@@ -383,5 +414,5 @@ Included helper script:
 
 ### Notes & Compatibility
 
-- These configs were built for CachyOS but many parts work on other Arch-based, systemd distros using GNOME.
+- These configs were built for CachyOS but installer logic supports Fedora and Arch-based systems.
 - Some parts may require extra packages such as `ntfs-3g`, `gamemode`, or `mangohud`.

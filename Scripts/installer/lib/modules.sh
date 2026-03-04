@@ -212,6 +212,7 @@ install_gnome_extensions_bundle() {
     fi
   fi
 
+  local extension_dir="$HOME/.local/share/gnome-shell/extensions"
   local uuid
   local failed_count=0
   for uuid in "${uuids[@]}"; do
@@ -224,7 +225,7 @@ install_gnome_extensions_bundle() {
         installed=1
       else
         local tries=0
-        while [[ "$tries" -lt 10 ]]; do
+        while [[ "$tries" -lt 20 ]]; do
           if gnome-extensions info "$uuid" >/dev/null 2>&1; then
             installed=1
             break
@@ -244,7 +245,17 @@ install_gnome_extensions_bundle() {
       fi
     fi
 
-    if [[ "$DRY_RUN" -eq 0 ]] && ! gnome-extensions info "$uuid" >/dev/null 2>&1; then
+    if [[ "$DRY_RUN" -eq 0 ]]; then
+      if gnome-extensions info "$uuid" >/dev/null 2>&1; then
+        installed=1
+      elif gnome-extensions list | grep -qx "$uuid"; then
+        installed=1
+      elif [[ -d "$extension_dir/$uuid" ]]; then
+        installed=1
+      fi
+    fi
+
+    if [[ "$DRY_RUN" -eq 0 && "$installed" -eq 0 ]]; then
       warn "Failed to install extension: $uuid"
       record_failed "gnome-extension:$uuid"
       failed_count=$((failed_count + 1))
@@ -378,6 +389,46 @@ ensure_rust_build_deps() {
   RUST_BUILD_DEPS_READY=1
 }
 
+ensure_cargo_binary_on_path() {
+  local bin="$1"
+  if command -v "$bin" >/dev/null 2>&1; then
+    return 0
+  fi
+  if [[ -x "$HOME/.cargo/bin/$bin" ]]; then
+    run_cmd "mkdir -p \"$HOME/.local/bin\""
+    run_cmd "ln -sf \"$HOME/.cargo/bin/$bin\" \"$HOME/.local/bin/$bin\""
+  fi
+  command -v "$bin" >/dev/null 2>&1 || [[ -x "$HOME/.local/bin/$bin" ]] || [[ -x "$HOME/.cargo/bin/$bin" ]]
+}
+
+ensure_cargo_update_available() {
+  if ensure_cargo_binary_on_path "cargo-install-update"; then
+    return 0
+  fi
+  if ! command -v cargo >/dev/null 2>&1; then
+    warn "cargo not found; cannot install cargo-update."
+    return 1
+  fi
+
+  ensure_rust_build_deps
+  run_cmd "cargo install cargo-update"
+  ensure_cargo_binary_on_path "cargo-install-update"
+}
+
+ensure_runin_available() {
+  if ensure_cargo_binary_on_path "runin"; then
+    return 0
+  fi
+  if ! command -v cargo >/dev/null 2>&1; then
+    warn "cargo not found; cannot install runin."
+    return 1
+  fi
+
+  ensure_rust_build_deps
+  run_cmd "cargo install runin"
+  ensure_cargo_binary_on_path "runin"
+}
+
 ensure_starship_available() {
   if command -v starship >/dev/null 2>&1; then
     return 0
@@ -467,20 +518,14 @@ module_terminal() {
   fi
 
   if confirm_action "Install cargo-update (cargo install cargo-update)"; then
-    if command -v cargo >/dev/null 2>&1; then
-      ensure_rust_build_deps
-      run_cmd "cargo install cargo-update"
-    else
-      warn "cargo not found; skipping cargo-update install."
+    if ! ensure_cargo_update_available; then
+      record_failed "terminal:cargo-update"
     fi
   fi
 
   if confirm_action "Install runin (cargo install runin)"; then
-    if command -v cargo >/dev/null 2>&1; then
-      ensure_rust_build_deps
-      run_cmd "cargo install runin"
-    else
-      warn "cargo not found; skipping runin install."
+    if ! ensure_runin_available; then
+      record_failed "terminal:runin"
     fi
   fi
 
