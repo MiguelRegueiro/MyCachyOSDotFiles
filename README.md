@@ -174,6 +174,7 @@ This setup uses Kitty + Fish + Starship + Fastfetch.
   - Set default shell: `chsh -s /usr/bin/fish`
   - Config: `~/.config/fish/config.fish`
   - Includes `fzf` key bindings and `up` abbreviation
+  - Rust CLI updater used by `up`: `cargo install cargo-update` (adds `cargo install-update -a` to update installed Cargo binaries in one command)
 - Starship
   - Install: `curl -sS https://starship.rs/install.sh | sh`
   - Config: `~/.config/starship.toml`
