@@ -50,7 +50,7 @@ gsettings set org.gnome.desktop.interface show-battery-percentage true
 
 # Configure custom application launchers
 # Create paths for custom keybindings if they don't exist
-gsettings set org.gnome.settings-daemon.plugins.media-keys custom-keybindings "['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/']"
+gsettings set org.gnome.settings-daemon.plugins.media-keys custom-keybindings "['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/']"
 
 # Super+E: Files (Nautilus)
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ name 'files'
@@ -76,6 +76,11 @@ gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/or
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/ name 'Ocr'
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/ command '/usr/bin/flatpak run com.github.dynobo.normcap'
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/ binding '<Super>F9'
+
+# Super+ç: Runin in Kitty
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/ name 'runin'
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/ command 'kitty -e runin'
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/ binding '<Super>ccedilla'
 
 # Set up Super+Q to close the active window
 gsettings set org.gnome.desktop.wm.keybindings close "['<Super>q']"
@@ -105,6 +110,7 @@ echo -e "    ${WHITE}•${NC} ${BRIGHT_BLUE}Super+Enter${NC}: Kitty Terminal"
 echo -e "    ${WHITE}•${NC} ${BRIGHT_BLUE}Super+R${NC}: Btop"
 echo -e "    ${WHITE}•${NC} ${BRIGHT_BLUE}Super+B${NC}: Zen Browser"
 echo -e "    ${WHITE}•${NC} ${BRIGHT_BLUE}Super+F9${NC}: OCR (Normcap)"
+echo -e "    ${WHITE}•${NC} ${BRIGHT_BLUE}Super+ç${NC}: Runin in Kitty"
 echo ""
 echo -e "  ${DARK_BLUE}⚙️  System Settings:${NC}"
 echo -e "    ${WHITE}•${NC} ${BRIGHT_BLUE}Show battery percentage${NC}: Enabled"

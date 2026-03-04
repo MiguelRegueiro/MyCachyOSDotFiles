@@ -37,7 +37,17 @@ This setup is tailored for CachyOS, but many parts work on other Arch-based syst
 
 Get up and running quickly with these steps.
 
-Note: later this section will include a guided script where you can select what to apply from this repo.
+Recommended (guided installer; run and choose what to apply):
+
+```bash
+./Scripts/install.sh
+```
+
+For test/preview mode (no changes):
+
+```bash
+./Scripts/install.sh --dry-run
+```
 
 1. Clone the repository:
    ```bash
