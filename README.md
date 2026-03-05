@@ -12,7 +12,7 @@
 
 CachyOS-focused GNOME dotfiles with a modular installer that also supports Arch-based and Fedora systems.
 
-Some defaults are Cachy-branded (for example Fastfetch logo/theme), but modules are optional and can be applied selectively.
+Fastfetch branding is customizable (CachyOS, Fedora, and Nobara logos are included), and modules can be applied selectively.
 
 ---
 
