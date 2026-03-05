@@ -67,6 +67,12 @@ Example:
 
 </details>
 
+### Installer Demo
+
+<div align="center">
+<img src="screenshots/installerdemo.webp" alt="Installer demo" width="96%"/>
+</div>
+
 ## 🧭 Installer Workflow (What It Does)
 
 Done by installer: this section is applied by `./Scripts/install.sh`.
