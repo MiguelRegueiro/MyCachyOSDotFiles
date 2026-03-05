@@ -62,6 +62,8 @@ print_summary() {
   fi
 
   log "$(style '1;36' "Installer finished.")"
+  log "User: ${USER:-unknown}"
+  log "Home: ${HOME:-unknown}"
   log "Log file: $LOG_FILE"
   log "Backup dir: $BACKUP_DIR"
 }
