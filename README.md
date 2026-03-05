@@ -10,9 +10,9 @@
 
 <br>
 
-CachyOS-focused GNOME dotfiles with a modular installer that also supports Arch-based and Fedora systems.
+A CachyOS-focused GNOME dotfiles setup with a modular installer that automates desktop and system configuration, with support for Arch-based and Fedora systems.
 
-Modules can be applied selectively, so you can install only what you need.
+Modules can be applied selectively, allowing you to install only the components you need.
 
 ---
 

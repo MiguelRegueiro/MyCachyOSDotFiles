@@ -8,21 +8,23 @@
 //            "top": 2,
 //            "left": 3
 //        }
-//    },                          
+//    },
 
-	        "logo": {
-	      "type": "kitty",
-	      "source": "~/.config/fastfetch/CachyOS3.png",
-	      "width":38,
-	      "padding": {
-	      "top": 0,
-	      "left": 2,
-	      "right": 2,
-	      }
-	    },
-	    "modules": [
-	        {
-	            "type": "host",
+        "logo": {
+      "type": "kitty",
+      "source": "/home/regueiro/.config/fastfetch/CachyOS3.png",
+      "width":38,
+      "padding": {
+      "top": 3,
+      "left": 2,
+      "right": 2,
+      }
+    },
+    "modules": [
+        "break",
+
+        {
+            "type": "host",
             "key": "PC",
             "keyColor": "#04b4e0"
         },
@@ -142,6 +144,6 @@
  //            "paddingLeft": 0,
  //            "symbol": "circle"
  //        }
- 
+
     ]
 }
