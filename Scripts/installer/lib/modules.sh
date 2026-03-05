@@ -9,8 +9,8 @@ module_description() {
     terminal) echo "fish/kitty/starship/fastfetch setup + configs" ;;
     media) echo "mpv stack packages + mpv config" ;;
     flatpaks) echo "curated Flatpak application bundle" ;;
-    language) echo "ibus + anthy input setup" ;;
-    virtualization) echo "libvirt/qemu stack and optional service setup" ;;
+    language) echo "install ibus-anthy and add Japanese (Anthy) as an additional keyboard layout" ;;
+    virtualization) echo "QEMU/KVM + virt-manager + libvirt setup (optional services/network)" ;;
     *) echo "custom module" ;;
   esac
 }
@@ -39,7 +39,7 @@ module_user_scope() {
     terminal) echo "copy configs, chsh, cargo install" ;;
     media) echo "copy mpv config" ;;
     flatpaks) echo "flatpak remote add + flatpak install (user scope)" ;;
-    language) echo "start ibus daemon" ;;
+    language) echo "configure Anthy input source, start ibus daemon" ;;
     virtualization) echo "module selection and confirmations" ;;
     *) echo "varies" ;;
   esac
@@ -651,6 +651,42 @@ module_media() {
   fi
 }
 
+configure_anthy_input_source() {
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    log "[DRY-RUN] Would append Anthy to org.gnome.desktop.input-sources (if missing)"
+    return 0
+  fi
+
+  if ! command -v gsettings >/dev/null 2>&1; then
+    warn "gsettings not found; skipping Anthy input source setup."
+    return 1
+  fi
+
+  local current new_sources
+  current="$(gsettings get org.gnome.desktop.input-sources sources 2>/dev/null || true)"
+  if [[ -z "$current" ]]; then
+    warn "Could not read current GNOME input sources; skipping Anthy input source setup."
+    return 1
+  fi
+
+  # Strip optional GVariant annotation when present.
+  current="${current#@a(ss) }"
+
+  if [[ "$current" == *"('ibus', 'anthy')"* ]]; then
+    log "Anthy input source is already present."
+    return 0
+  fi
+
+  if [[ "$current" == "[]" ]]; then
+    new_sources="[('xkb', 'us'), ('ibus', 'anthy')]"
+  else
+    new_sources="${current%]} , ('ibus', 'anthy')]"
+  fi
+
+  run_cmd "gsettings set org.gnome.desktop.input-sources sources \"$new_sources\""
+  run_cmd_soft "gsettings get org.gnome.desktop.input-sources sources" || true
+}
+
 module_flatpaks() {
   print_section "Module: flatpaks"
   install_flatpak_bundle || true
@@ -659,6 +695,10 @@ module_flatpaks() {
 module_language() {
   print_section "Module: language"
   install_packages "language" ibus ibus-anthy || true
+
+  if confirm_action "Add Japanese input source (IBus Anthy) as an additional keyboard"; then
+    configure_anthy_input_source || true
+  fi
 
   if confirm_action "Start IBus daemon now (ibus-daemon -drx)"; then
     run_cmd "ibus-daemon -drx"

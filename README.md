@@ -78,8 +78,8 @@ Execution order:
 | `terminal` | Fish/Kitty/Fastfetch/Starship config and helper CLI installs |
 | `media` | media packages + MPV config |
 | `flatpaks` | curated Flatpak app bundle from `Scripts/installer/data/flatpaks.txt` |
-| `language` | IBus + Anthy setup |
-| `virtualization` | QEMU/libvirt stack, groups/services/network (optional actions) |
+| `language` | IBus + Anthy setup (adds Japanese/Anthy as an additional keyboard layout) |
+| `virtualization` | QEMU/KVM + virt-manager + libvirt (optional groups/services/network actions) |
 
 Notes:
 - Curated Flatpak apps are managed by the `flatpaks` module.
@@ -211,6 +211,7 @@ Package installation is optional in the wizard and can be disabled with `--skip-
 - `language`:
   - CachyOS/Arch: `ibus`, `ibus-anthy`
   - Fedora/Nobara: `ibus`, `ibus-anthy`
+  - Adds Japanese (`ibus`, `anthy`) to GNOME input sources without replacing the primary layout
 - `virtualization`:
   - CachyOS/Arch: `qemu-full`, `virt-manager`, `virt-viewer`, `dnsmasq`, `libguestfs`, `ebtables`, `vde2`, `openbsd-netcat`, `libvirt`, `edk2-ovmf`, `swtpm`
   - Fedora/Nobara: `@virtualization`, `virt-manager`, `virt-viewer`, `libvirt`, `swtpm`
