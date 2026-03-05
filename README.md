@@ -12,7 +12,7 @@
 
 CachyOS-focused GNOME dotfiles with a modular installer that also supports Arch-based and Fedora systems.
 
-Fastfetch branding is customizable (CachyOS, Fedora, and Nobara logos are included), and modules can be applied selectively.
+Modules can be applied selectively, so you can install only what you need.
 
 ---
 
@@ -24,7 +24,7 @@ Fastfetch branding is customizable (CachyOS, Fedora, and Nobara logos are includ
 - **Terminal stack** (Kitty + Fish + Starship + Fastfetch)
 - **Cross-distro installer support** (Arch-based + Fedora)
 - **CachyOS-themed defaults** that can be customized (Fastfetch/logo)
-- **Language/media workflow** (MPV setup, Japanese input, optional Anki extras)
+- **Language/media workflow** (Japanese input via Anthy, MPV setup, optional Anki extras)
 - **System tooling** (virtualization stack, media setup, developer utilities)
 - **Safe to rerun** with backups and idempotent configuration
 
@@ -32,13 +32,15 @@ Fastfetch branding is customizable (CachyOS, Fedora, and Nobara logos are includ
 
 ## 🚀 Install
 
+Recommended:
+
 ```bash
 git clone https://github.com/MiguelRegueiro/MyCachyOSDotFiles
 cd MyCachyOSDotFiles
 ./Scripts/install.sh
 ```
 
-Preview mode (no changes):
+Optional preview mode (no changes):
 
 ```bash
 ./Scripts/install.sh --dry-run
@@ -49,11 +51,22 @@ You can also run `./Scripts/install.sh` and choose dry-run in the guided wizard.
 The installer is the main entrypoint for this repo. Manual commands are optional and mainly useful for fine-tuning.
 Installer scope is modular: run only the modules you want.
 
-Common flags:
+<details>
+<summary><strong>Common flags</strong></summary>
+
+- `--yes` run non-interactive mode (auto-accept prompts)
 - `--modules=base,gnome-core,flatpaks,...` run only selected modules
 - `--preset=core` run `base,gnome-core,gnome-extensions,terminal,media`
 - `--preset=full` run all modules
 - `--skip-packages` skip distro package installation
+
+Example:
+
+```bash
+./Scripts/install.sh --modules=base,terminal
+```
+
+</details>
 
 ## 🧭 Installer Workflow (What It Does)
 
@@ -86,8 +99,6 @@ Notes:
 - Legacy alias `--modules=gnome` maps to `gnome-core,gnome-extensions`.
 
 ## 🔎 What Will Change On My System
-
-Done by installer: this section lists what the installer may change.
 
 At a glance:
 - Writes GNOME `gsettings` for shortcuts/workspaces/theme/wallpaper.
@@ -177,7 +188,7 @@ If `gnome-extensions` actions are enabled and extensions are installed, installe
 | `Shift + Super + P` | Reboot              | GNOME media-keys `reboot` action |
 
 Notes:
-- The `runin` shortcut uses GNOME key name `<Super>ccedilla` (layout-dependent, typically `Super + Ç` on Spanish keyboards).
+- `runin` uses GNOME key name `<Super>ccedilla` (usually `Super + Ç` on Spanish keyboards). This is convenient because `Ç` is near Enter, and `Super + Enter` already opens the terminal.
 - Alt+Tab is forced to window-switcher mode (window previews + icons) by setting `switch-windows` and clearing `switch-applications`/`switch-applications-backward` (disables app-group/icon-only Alt+Tab behavior).
 - Workspace behavior is pinned to 5 static workspaces (`dynamic-workspaces=false`, `num-workspaces=5`).
 
@@ -211,7 +222,7 @@ Package installation is optional in the wizard and can be disabled with `--skip-
 - `language`:
   - CachyOS/Arch: `ibus`, `ibus-anthy`
   - Fedora/Nobara: `ibus`, `ibus-anthy`
-  - Adds Japanese (`ibus`, `anthy`) to GNOME input sources without replacing the primary layout
+  - Adds Japanese (`ibus`, `Anthy`) to GNOME input sources without replacing the primary layout
 - `virtualization`:
   - CachyOS/Arch: `qemu-full`, `virt-manager`, `virt-viewer`, `dnsmasq`, `libguestfs`, `ebtables`, `vde2`, `openbsd-netcat`, `libvirt`, `edk2-ovmf`, `swtpm`
   - Fedora/Nobara: `@virtualization`, `virt-manager`, `virt-viewer`, `libvirt`, `swtpm`
@@ -258,41 +269,38 @@ Package installation is optional in the wizard and can be disabled with `--skip-
 
 </details>
 
-### Network actions
+### Network Access (Installer)
 
-When the corresponding module/action is enabled, installer may access:
+The installer may use network access for enabled modules/actions:
 
-<details>
-<summary><strong>Full network actions list</strong></summary>
+- Distro package repos (`pacman` on Arch/CachyOS, `dnf` on Fedora/Nobara)
+- Flathub (`flatpak remote-add`, `flatpak install`)
+- Starship installer (`curl` from `starship.rs`)
+- Cargo crates (`cargo install` for `cargo-update`, `runin`)
+- PyPI (`python3 -m pip install --user --upgrade gnome-extensions-cli`)
+- GNOME extension downloads (GNOME Shell D-Bus install or `gext`)
 
-- Distro package repositories via `pacman` (CachyOS/Arch) or `dnf` (Fedora/Nobara)
-- Flathub via `flatpak remote-add` and `flatpak install`
-- `starship.rs` via `curl` for Starship official installer
-- `crates.io` via `cargo install` (`cargo-update`, `runin`)
-- PyPI via `python3 -m pip install --user --upgrade gnome-extensions-cli`
-- GNOME extensions endpoints via GNOME Shell D-Bus install or `gext`
-
-</details>
-
-### Idempotency Contract
+### Installer Re-run Behavior
 
 <details>
-<summary><strong>Idempotency details and caveats</strong></summary>
+<summary><strong>What happens when you run the installer again</strong></summary>
 
-- Safe to run multiple times: yes, with caveats below.
-- Package installs:
-  - CachyOS/Arch uses `pacman -S --needed`, which skips already installed packages.
-  - Fedora/Nobara uses `dnf install -y`; already installed packages are typically left unchanged.
-- `gsettings set` is convergent: reruns set the same target values.
-- Flatpak remote add uses `--if-not-exists`; reruns do not duplicate remotes.
-- Config copy actions are convergent in content but destructive to current target tree:
-  - before overwrite, installer snapshots current target into timestamped backup dir
-  - then it replaces target with repo version
-- Known non-idempotent or side-effect caveats:
-  - each run creates a new timestamped backup directory
-  - `install.log` is recreated each run
-  - `cargo install ...`, `pip install --upgrade ...`, and network fetch/install steps may still download/rebuild/update
-  - `fc-cache -fv` and service start commands may do repeat work even when already configured
+- Safe to re-run: **yes**.
+- Package installs are usually no-op when already installed:
+  - CachyOS/Arch: `pacman -S --needed`
+  - Fedora/Nobara: `dnf install -y`
+- GNOME settings are reapplied to the same values (`gsettings set`).
+- Flatpak remotes are not duplicated (`--if-not-exists`).
+- Config updates:
+  - replace-style targets are backed up first (when they already exist), then replaced
+  - merge-style copies (icons/wallpapers/themes/fonts) sync into destination without per-file snapshots
+- If a replace-target does not exist yet (for example first run), there is nothing to snapshot for that target.
+
+Expected effects each run:
+- `install.log` is recreated.
+- A new backup path is generated each run. The backup directory appears only when existing replace-targets are snapshotted.
+- Network/install steps (`cargo`, `pip`, Flatpak, distro packages) may still download or update.
+- `fc-cache -fv` and some service actions may run again even when already configured.
 
 </details>
 
@@ -327,8 +335,6 @@ Optional extras (not installer-managed):
 <details>
 <summary><strong>Show section</strong></summary>
 
-Manual: SSH aliases below are personal and not done by the installer.
-
 SSH alias examples:
 
 For Fish (`~/.config/fish/config.local.fish`):
@@ -352,7 +358,8 @@ Optional (personal workflow): I also use [SSH Watchdog](https://extensions.gnome
 
 ## 🛠️ System Guides
 
-Manual: these guides are not done by the installer.
+> [!NOTE]
+> These guides are manual and not done by `./Scripts/install.sh`.
 
 ### Swap Usage Troubleshooting (Swappiness)
 
@@ -393,7 +400,8 @@ External NTFS game drive (Windows-formatted):
 
 ## 🎮 HP Omen
 
-Manual: this guide is not done by the installer.
+> [!NOTE]
+> This guide is manual and not done by `./Scripts/install.sh`.
 
 <details>
 <summary><strong>Show section</strong></summary>
@@ -458,10 +466,11 @@ Installer summary output at end of run includes:
 
 Installer behavior:
 - `install.log` is written at repo root and recreated each run.
-- Each installer run creates a timestamped backup dir:
+- Each installer run generates a timestamped backup path:
   - `~/.config-backups/mycachyosdotfiles_<timestamp>/`
+  - backup directory appears only when something is actually backed up
 - Backups include existing targets before replacement actions (for example `~/.config/fish`, `~/.config/kitty`, `~/.config/fastfetch`, `~/.config/mpv`, `~/.config/starship.toml`).
-- Merge-style copy actions (icons/wallpapers/themes/fonts) sync contents into destination and do not snapshot every overwritten file individually.
+- Merge-copy actions (icons/wallpapers/themes/fonts) sync files in place and do not create per-file backups.
 
 Restore examples:
 
