@@ -48,7 +48,7 @@ Optional preview mode (no changes):
 
 You can also run `./Scripts/install.sh` and choose dry-run in the guided wizard.
 
-The installer is the main entrypoint for this repo. Manual-only sections are documented below (for example Anki/SpeechNote tweaks, SSH aliases, system guides, and HP Omen notes).
+> The installer is the main entrypoint for this repo. Manual-only sections are documented below (for example Anki/SpeechNote tweaks, SSH aliases, system guides, and HP Omen notes).
 
 <details>
 <summary><strong>Common flags</strong></summary>
