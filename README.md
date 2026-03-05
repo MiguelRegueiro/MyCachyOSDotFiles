@@ -57,7 +57,7 @@ Common flags:
 
 ## 🧭 Installer Workflow (What It Does)
 
-Scope: installer-managed (`./Scripts/install.sh`).
+Done by installer: this section is applied by `./Scripts/install.sh`.
 
 Execution order:
 
@@ -87,7 +87,7 @@ Notes:
 
 ## 🔎 What Will Change On My System
 
-Scope: installer-managed side effects.
+Done by installer: this section lists what the installer may change.
 
 At a glance:
 - Writes GNOME `gsettings` for shortcuts/workspaces/theme/wallpaper.
@@ -166,21 +166,20 @@ If `gnome-extensions` actions are enabled and extensions are installed, installe
 |-------------------|-----------------------|---------|
 | `Super + 1..5`    | Switch workspace      | GNOME `switch-to-workspace-1..5` |
 | `Shift + Super + 1..5` | Move window to workspace | GNOME `move-to-workspace-1..5` |
-| `Alt + Tab`       | Switch windows        | GNOME `switch-windows` |
-| `Shift + Alt + Tab` | Switch windows (backward) | GNOME `switch-windows-backward` |
 | `Super + E`       | Files (Nautilus)      | `nautilus --new-window` |
 | `Super + Enter`   | Kitty Terminal        | `kitty` |
 | `Super + R`       | Btop                  | `kitty -e btop` |
 | `Super + B`       | Zen Browser           | `flatpak run app.zen_browser.zen` |
 | `Super + F9`      | OCR (NormCap)         | `/usr/bin/flatpak run com.github.dynobo.normcap` |
-| `Super + Ç`       | Runin in Kitty        | `kitty -e runin` |
+| `Super + Ç`       | runin (smart command launcher) | `kitty -e runin` |
 | `Super + Q`       | Close Active Window   | Closes the currently focused window |
 | `Shift + Super + L` | Shutdown            | GNOME media-keys `shutdown` action |
 | `Shift + Super + P` | Reboot              | GNOME media-keys `reboot` action |
 
-Note: the Runin shortcut uses GNOME key name `<Super>ccedilla` (layout-dependent, typically `Super + Ç` on Spanish keyboards).
-Note: the installer also clears `switch-applications` and `switch-applications-backward` (app-group Alt+Tab behavior).
-Note: workspace behavior is pinned to 5 static workspaces (`dynamic-workspaces=false`, `num-workspaces=5`).
+Notes:
+- The `runin` shortcut uses GNOME key name `<Super>ccedilla` (layout-dependent, typically `Super + Ç` on Spanish keyboards).
+- Alt+Tab is forced to window-switcher mode (window previews + icons) by setting `switch-windows` and clearing `switch-applications`/`switch-applications-backward` (disables app-group/icon-only Alt+Tab behavior).
+- Workspace behavior is pinned to 5 static workspaces (`dynamic-workspaces=false`, `num-workspaces=5`).
 
 ### Packages installed (by module)
 
@@ -298,10 +297,11 @@ When the corresponding module/action is enabled, installer may access:
 
 ---
 
-## 🧱 Customization Reference
+## 🧱 Manual Customization Reference
 
-> Important: Everything below this point is **not** handled by `./Scripts/install.sh` unless a section explicitly says otherwise.
-Keep private values local (for example personal SSH aliases) instead of committing them.
+> [!WARNING]
+> The items in this **Manual Customization Reference** section are **not** handled by `./Scripts/install.sh`.
+> Keep private values local (for example personal SSH aliases) instead of committing them.
 
 ### Anki & SpeechNote
 
@@ -321,12 +321,12 @@ Optional extras (not installer-managed):
 
 </details>
 
-### Connectivity
+### SSH Aliases
 
 <details>
 <summary><strong>Show section</strong></summary>
 
-Installer does not manage personal SSH aliases. Keep these local:
+Manual: SSH aliases below are personal and not done by the installer.
 
 SSH alias examples:
 
@@ -351,7 +351,7 @@ Optional (personal workflow): I also use [SSH Watchdog](https://extensions.gnome
 
 ## 🛠️ System Guides
 
-Scope: manual guides (not installer-managed).
+Manual: these guides are not done by the installer.
 
 ### Swap Usage Troubleshooting (Swappiness)
 
@@ -392,7 +392,7 @@ External NTFS game drive (Windows-formatted):
 
 ## 🎮 HP Omen
 
-Scope: manual guide (not installer-managed).
+Manual: this guide is not done by the installer.
 
 <details>
 <summary><strong>Show section</strong></summary>
