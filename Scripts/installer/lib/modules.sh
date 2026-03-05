@@ -456,6 +456,11 @@ ensure_cargo_binary_on_path() {
 }
 
 ensure_cargo_update_available() {
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    log "[DRY-RUN] Would ensure cargo-update is available"
+    return 0
+  fi
+
   if ensure_cargo_binary_on_path "cargo-install-update"; then
     return 0
   fi
@@ -470,6 +475,11 @@ ensure_cargo_update_available() {
 }
 
 ensure_runin_available() {
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    log "[DRY-RUN] Would ensure runin is available"
+    return 0
+  fi
+
   ensure_fd_available || true
   if ensure_cargo_binary_on_path "runin"; then
     return 0
@@ -511,6 +521,11 @@ ensure_fd_available() {
 }
 
 ensure_starship_available() {
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    log "[DRY-RUN] Would ensure starship is available"
+    return 0
+  fi
+
   if command -v starship >/dev/null 2>&1; then
     return 0
   fi
