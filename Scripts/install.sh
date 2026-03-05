@@ -70,7 +70,7 @@ main() {
   mapfile -t modules_to_run < <(selected_modules)
 
   local requires_root=0
-  if [[ "$SKIP_PACKAGES" -eq 0 ]] || [[ "$INSTALL_FLATPAKS" -eq 1 ]]; then
+  if [[ "$SKIP_PACKAGES" -eq 0 ]]; then
     requires_root=1
   fi
   local mod
@@ -160,6 +160,14 @@ main() {
           record_module_skipped "media"
         fi
         ;;
+      flatpaks)
+        if [[ "$ASK_MODULE_CONFIRM" -eq 0 ]] || confirm "Run module: flatpaks?"; then
+          module_flatpaks
+          record_module_completed "flatpaks"
+        else
+          record_module_skipped "flatpaks"
+        fi
+        ;;
       language)
         if [[ "$ASK_MODULE_CONFIRM" -eq 0 ]] || confirm "Run module: language?"; then
           module_language
@@ -181,17 +189,6 @@ main() {
         ;;
     esac
   done
-
-  if [[ "$WIZARD_USED" -eq 1 ]]; then
-    if [[ "$INSTALL_FLATPAKS" -eq 1 ]]; then
-      install_flatpak_bundle || true
-    fi
-  else
-    if confirm_with_default "Install curated Flatpak app bundle?" 0; then
-      INSTALL_FLATPAKS=1
-      install_flatpak_bundle || true
-    fi
-  fi
 
   print_summary
   pause_before_exit_if_guided

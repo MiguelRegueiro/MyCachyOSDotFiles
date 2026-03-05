@@ -10,7 +10,6 @@ PRESET=${PRESET:-""}
 ASK_MODULE_CONFIRM=${ASK_MODULE_CONFIRM:-1}
 WIZARD_USED=${WIZARD_USED:-0}
 AUTO_ACCEPT_POST_PLAN=${AUTO_ACCEPT_POST_PLAN:-0}
-INSTALL_FLATPAKS=${INSTALL_FLATPAKS:-0}
 ROOT_ACTIONS_ALLOWED=${ROOT_ACTIONS_ALLOWED:-1}
 FISH_SHELL_CHANGED=${FISH_SHELL_CHANGED:-0}
 RUST_BUILD_DEPS_READY=${RUST_BUILD_DEPS_READY:-0}
@@ -28,6 +27,7 @@ MODULES=(
   "gnome-extensions"
   "terminal"
   "media"
+  "flatpaks"
   "language"
   "virtualization"
 )
@@ -130,7 +130,7 @@ Options:
   --help                Show this help
 
 Modules:
-  base, gnome-core, gnome-extensions, terminal, media, language, virtualization
+  base, gnome-core, gnome-extensions, terminal, media, flatpaks, language, virtualization
   (legacy alias: gnome -> gnome-core,gnome-extensions)
 USAGE
 }

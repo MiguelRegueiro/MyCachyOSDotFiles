@@ -53,17 +53,12 @@ interactive_wizard() {
     log "$(style '1;33' "Package install disabled. User-level config actions will still run.")"
   fi
 
-  if confirm_with_default "Install curated Flatpak app bundle?" 0; then
-    INSTALL_FLATPAKS=1
-  fi
-
   module_selection_wizard
 
   print_line
   log "$(style '1;36' "Wizard plan:")"
   log "  dry-run: $(style '1;34' "$([[ "$DRY_RUN" -eq 1 ]] && echo yes || echo no)")"
   log "  install packages: $(style '1;34' "$([[ "$SKIP_PACKAGES" -eq 1 ]] && echo no || echo yes)")"
-  log "  install flatpak apps: $(style '1;34' "$([[ "$INSTALL_FLATPAKS" -eq 1 ]] && echo yes || echo no)")"
   log "  modules: $(style '1;34' "$MODULES_CSV")"
   if ! confirm "Start now with this plan?"; then
     log "Aborted by user."

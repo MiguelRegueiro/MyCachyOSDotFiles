@@ -8,6 +8,7 @@ module_description() {
     gnome) echo "legacy alias for gnome-core + gnome-extensions" ;;
     terminal) echo "fish/kitty/starship/fastfetch setup + configs" ;;
     media) echo "mpv stack packages + mpv config" ;;
+    flatpaks) echo "curated Flatpak application bundle" ;;
     language) echo "ibus + anthy input setup" ;;
     virtualization) echo "libvirt/qemu stack and optional service setup" ;;
     *) echo "custom module" ;;
@@ -22,6 +23,7 @@ module_sudo_scope() {
     gnome) echo "package install (optional), flatpak install (optional), optional pip dependency install" ;;
     terminal) echo "package install (optional)" ;;
     media) echo "package install (optional)" ;;
+    flatpaks) echo "flatpak package install (if missing)" ;;
     language) echo "package install (optional)" ;;
     virtualization) echo "package install, usermod, systemctl, virsh (optional)" ;;
     *) echo "varies" ;;
@@ -36,6 +38,7 @@ module_user_scope() {
     gnome) echo "legacy alias: runs gnome-core and gnome-extensions" ;;
     terminal) echo "copy configs, chsh, cargo install" ;;
     media) echo "copy mpv config" ;;
+    flatpaks) echo "flatpak remote add + flatpak install (user scope)" ;;
     language) echo "start ibus daemon" ;;
     virtualization) echo "module selection and confirmations" ;;
     *) echo "varies" ;;
@@ -631,6 +634,11 @@ module_media() {
   if confirm_action "Copy MPV config to ~/.config/mpv"; then
     copy_tree_as_dir "$REPO_ROOT/mpv" "$HOME/.config/mpv"
   fi
+}
+
+module_flatpaks() {
+  print_section "Module: flatpaks"
+  install_flatpak_bundle || true
 }
 
 module_language() {
