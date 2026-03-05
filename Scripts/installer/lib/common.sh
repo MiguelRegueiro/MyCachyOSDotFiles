@@ -120,18 +120,24 @@ usage() {
 Usage: ./Scripts/install.sh [options]
 
 Options:
-  --yes                 Non-interactive mode (accept prompts)
-  --dry-run             Show actions without changing anything
-  --skip-packages       Do not install packages
-  --modules=a,b,c       Run only selected modules
-  --preset=name         Use preset modules: core, full
-  --command-prompts     Ask before each underlying command (verbose mode)
-  --no-command-prompts  Alias for default behavior (no per-command prompts)
-  --help                Show this help
+  --yes               Non-interactive (auto-accept prompts)
+  --dry-run           Preview only (no changes)
+  --skip-packages     Skip distro package installs
+  --modules=a,b,c     Run only selected modules
+  --preset=core|full  Use a module preset (see below)
+  --command-prompts   Ask before each command
+  --no-command-prompts
+                     Use action-level prompts (default)
+  --help              Show this help
 
-Modules:
-  base, gnome-core, gnome-extensions, terminal, media, flatpaks, language, virtualization
-  (legacy alias: gnome -> gnome-core,gnome-extensions)
+Presets:
+  core   Recommended starter set:
+         base, gnome-core, gnome-extensions, terminal, media
+  full   Everything in core plus:
+         flatpaks, language, virtualization
+
+Modules: base, gnome-core, gnome-extensions, terminal, media, flatpaks, language, virtualization
+Alias: gnome -> gnome-core,gnome-extensions
 USAGE
 }
 

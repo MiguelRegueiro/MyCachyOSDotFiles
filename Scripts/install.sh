@@ -67,7 +67,14 @@ main() {
   fi
 
   local modules_to_run=()
-  mapfile -t modules_to_run < <(selected_modules)
+  local selected_modules_output
+  if ! selected_modules_output="$(selected_modules)"; then
+    if [[ -n "$selected_modules_output" ]]; then
+      printf '%s\n' "$selected_modules_output"
+    fi
+    exit 1
+  fi
+  mapfile -t modules_to_run <<<"$selected_modules_output"
 
   local requires_root=0
   if [[ "$SKIP_PACKAGES" -eq 0 ]]; then
