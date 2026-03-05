@@ -48,8 +48,7 @@ Optional preview mode (no changes):
 
 You can also run `./Scripts/install.sh` and choose dry-run in the guided wizard.
 
-The installer is the main entrypoint for this repo. Manual commands are optional and mainly useful for fine-tuning.
-Installer scope is modular: run only the modules you want.
+The installer is the main entrypoint for this repo. Manual-only sections are documented below (for example Anki/SpeechNote tweaks, SSH aliases, system guides, and HP Omen notes).
 
 <details>
 <summary><strong>Common flags</strong></summary>
@@ -91,7 +90,7 @@ Execution order:
 | `terminal` | Fish/Kitty/Fastfetch/Starship config and helper CLI installs |
 | `media` | media packages + MPV config |
 | `flatpaks` | curated Flatpak app bundle from `Scripts/installer/data/flatpaks.txt` |
-| `language` | IBus + Anthy setup (adds Japanese/Anthy as an additional keyboard layout) |
+| `language` | IBus + Anthy setup (adds Japanese (Anthy) as an additional keyboard layout) |
 | `virtualization` | QEMU/KVM + virt-manager + libvirt (optional groups/services/network actions) |
 
 Notes:
@@ -309,7 +308,7 @@ Expected effects each run:
 ## 🧱 Manual Customization Reference
 
 > [!WARNING]
-> The items in this **Manual Customization Reference** section are **not** handled by `./Scripts/install.sh`.
+> The items in this section are documented manual steps and are **not** handled by `./Scripts/install.sh`.
 > Keep private values local (for example personal SSH aliases) instead of committing them.
 
 ### Anki & SpeechNote
@@ -439,13 +438,14 @@ Included helper script:
 
 ---
 
-## ℹ️ Reference
+## ℹ️ Usage & Maintenance
 
 ### How to Use This Repo
 
 1. Use `./Scripts/install.sh` as the single entrypoint.
 2. Use `--dry-run` to force preview mode (or choose dry-run in the guided wizard).
 3. Re-run installer anytime; existing config is backed up before overwrite.
+4. For manual-only items, see **Manual Customization Reference** and **System Guides**.
 
 Compatibility notes:
 - These configs are CachyOS-focused, but installer logic supports Arch-based and Fedora systems.
@@ -485,7 +485,7 @@ cp -a "$BACKUP_DIR/.config/fish" "$HOME/.config/fish"
 cp -a "$BACKUP_DIR"/. "$HOME"/
 ```
 
-### 📄 License & Third-Party Assets
+## 📄 License & Third-Party Assets
 
 - Repo-level configuration/scripts are licensed under [LICENSE](LICENSE).
 - Bundled third-party assets (fonts/icons/wallpapers/logos) may use different licenses, and upstream notices are preserved (for example `icons/MacTahoe/COPYING` and `icons/MacTahoe/AUTHORS`).
