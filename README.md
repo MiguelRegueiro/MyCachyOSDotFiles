@@ -579,6 +579,32 @@ Included helper script:
 4. Re-run installer anytime; existing config is backed up before overwrite.
 5. Use `--dry-run` to test changes before applying.
 
+### Backup & Restore
+
+- Each installer run creates a timestamped backup dir:
+  - `~/.config-backups/mycachyosdotfiles_<timestamp>/`
+- The installer summary prints:
+  - `User`
+  - `Home`
+  - `Log file`
+  - `Backup dir`
+- `install.log` is written at repo root each run and recreated on next run.
+- Backups include existing targets before replacement actions (for example `~/.config/fish`, `~/.config/kitty`, `~/.config/fastfetch`, `~/.config/mpv`, `~/.config/starship.toml`).
+- Merge-style copy actions (icons/wallpapers/fonts) sync contents into destination and do not snapshot every overwritten file individually.
+
+Restore examples:
+
+```bash
+# Pick the most recent installer backup (or set this manually)
+BACKUP_DIR="$(ls -dt "$HOME"/.config-backups/mycachyosdotfiles_* | head -n1)"
+
+# Restore one config
+cp -a "$BACKUP_DIR/.config/fish" "$HOME/.config/fish"
+
+# Restore everything from a specific backup snapshot (review before running)
+cp -a "$BACKUP_DIR"/. "$HOME"/
+```
+
 ### 📄 License & Third-Party Assets
 
 - Repo-level configuration/scripts are licensed under [LICENSE](LICENSE).
