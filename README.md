@@ -10,9 +10,9 @@
 
 <br>
 
-Custom dotfiles and system tweaks for CachyOS (Arch-based).
+CachyOS-focused GNOME dotfiles with a modular installer that also supports Arch-based and Fedora systems.
 
-This setup is tailored for CachyOS, but many parts work on other Arch-based systems and GNOME setups.
+Some defaults are Cachy-branded (for example Fastfetch logo/theme), but modules are optional and can be applied selectively.
 
 ---
 
@@ -21,9 +21,10 @@ This setup is tailored for CachyOS, but many parts work on other Arch-based syst
 - **Modular installer** with dry-run support
 - **Automated GNOME desktop configuration** (workspaces, keybindings, themes)
 - **GNOME extensions automation** (Blur My Shell, TopHat)
-- **GPU-accelerated terminal stack** (Kitty + Fish + Starship + Fastfetch)
-- **Cross-distro support** (CachyOS/Arch and Fedora/Nobara)
-- **Language learning environment** (Anki, MPV setup, Japanese input)
+- **Terminal stack** (Kitty + Fish + Starship + Fastfetch)
+- **Cross-distro installer support** (Arch-based + Fedora)
+- **CachyOS-themed defaults** that can be customized (Fastfetch/logo)
+- **Language/media workflow** (MPV setup, Japanese input, optional Anki extras)
 - **System tooling** (virtualization stack, media setup, developer utilities)
 - **Safe to rerun** with backups and idempotent configuration
 
@@ -37,92 +38,65 @@ cd MyCachyOSDotFiles
 ./Scripts/install.sh
 ```
 
-Test mode (no changes):
+Preview mode (no changes):
 
 ```bash
 ./Scripts/install.sh --dry-run
 ```
 
+You can also run `./Scripts/install.sh` and choose dry-run in the guided wizard.
+
 The installer is the main entrypoint for this repo. Manual commands are optional and mainly useful for fine-tuning.
+Installer scope is modular: run only the modules you want.
+
+Common flags:
+- `--modules=base,gnome-core,flatpaks,...` run only selected modules
+- `--preset=core` run `base,gnome-core,gnome-extensions,terminal,media`
+- `--preset=full` run all modules
+- `--skip-packages` skip distro package installation
 
 ## 🧭 Installer Workflow (What It Does)
 
-The script follows this order:
+Scope: installer-managed (`./Scripts/install.sh`).
 
-1. Detect distro (Fedora vs Arch-based/CachyOS package mapping).
-2. Guided setup asks:
-   - dry-run or real run
-   - whether package installs are allowed
-   - whether curated Flatpaks should be installed
-   - which modules to run
-3. Shows a plan summary.
-4. If root actions are needed:
-   - requests sudo once (`sudo -v`)
-   - keeps sudo session alive during run
-5. Runs selected modules.
-6. Backs up existing files before overwriting config.
-7. Prints final summary (`completed / skipped / failed`) and backup/log paths.
+Execution order:
+
+1. Detect distro and package mapping.
+2. If no module/preset is provided, run guided setup (dry-run/packages/modules).
+3. Resolve selected modules from wizard, `--modules`, or `--preset`.
+4. Authenticate sudo once when root actions are needed.
+5. Run selected modules (each module still has action-level confirmations unless auto-accepted).
+6. Print final summary (completed/skipped/failed, module recap, action samples, and `User`/`Home`/log/backup paths).
 
 ### Modules
 
-- `base`
-  - Creates `~/.config`, icon/font dirs, wallpaper dir
-  - Copies `icons/`, `wallpapers/`, `Fonts/`
-  - Refreshes font cache (`fc-cache -fv`)
+| Module | What it manages |
+|---|---|
+| `base` | user dirs, icons, wallpapers, optional themes, fonts, font cache |
+| `gnome-core` | GNOME keybindings/workspaces/theme defaults/wallpaper |
+| `gnome-extensions` | Extension Manager, extension install/enable, TopHat + Blur My Shell defaults |
+| `terminal` | Fish/Kitty/Fastfetch/Starship config and helper CLI installs |
+| `media` | media packages + MPV config |
+| `flatpaks` | curated Flatpak app bundle from `Scripts/installer/data/flatpaks.txt` |
+| `language` | IBus + Anthy setup |
+| `virtualization` | QEMU/libvirt stack, groups/services/network (optional actions) |
 
-- `gnome-core`
-  - Installs GNOME packages: `gnome-tweaks`, `gnome-extensions-app`
-  - Applies keyboard/workspace shortcuts and launcher keybinds
-  - Sets fixed workspaces: `dynamic-workspaces=false`, `num-workspaces=5`
-  - Sets GNOME look defaults:
-    - dark mode (`prefer-dark`)
-    - icon theme: `MacTahoe-dark`
-    - cursor theme: `Bibata-Modern-Classic`
-  - Sets wallpaper to `~/Pictures/wallpapers/background`
-
-- `gnome-extensions`
-  - Installs Flatpak `com.mattjakeman.ExtensionManager`
-  - Installs GNOME extensions from `Scripts/installer/data/gnome_extensions.txt`
-    - primary method: GNOME Shell D-Bus install
-    - fallback: `gext` (`gnome-extensions-cli`)
-    - then enables each extension
-  - Applies extension defaults:
-    - TopHat: left panel, numeric CPU/RAM, RAM absolute units, hide disk/fs
-    - Blur My Shell: blur apps enabled, whitelist `kitty` + `org.gnome.Nautilus`, opaque focused window disabled
-
-- `terminal`
-  - Installs packages: `fish`, `kitty`, `fastfetch`, `fzf`, `btop`, `cargo`
-  - Copies configs: `fish/`, `kitty/`, `fastfetch/`, `starship.toml`
-  - Sets Fish as default shell
-  - Sets distro-aware Fish `up` abbreviation:
-    - Fedora-like: `dnf upgrade + flatpak update + cargo install-update -a`
-    - Arch/CachyOS: `paru -Syu + flatpak update + cargo install-update -a + limine-snapper-sync`
-  - Installs:
-    - `cargo-update` (`cargo install cargo-update`)
-    - `runin` (`cargo install runin`)
-    - Starship via official installer:
-      `curl -sS https://starship.rs/install.sh | sh -s -- -y -b "$HOME/.local/bin"`
-
-- `media`
-  - Installs media packages (Fedora/Arch-specific mapping)
-  - Copies MPV config
-
-- `language`
-  - Installs `ibus` + `ibus-anthy`
-  - Optional `ibus-daemon -drx`
-
-- `virtualization`
-  - Installs libvirt/QEMU stack (Fedora/Arch-specific mapping)
-  - Optional group add, libvirtd enable/start, default network setup
-
-Optional curated Flatpak bundle can be installed as a separate installer step.
-Legacy compatibility: `--modules=gnome` is accepted and maps to `gnome-core,gnome-extensions`.
+Notes:
+- Curated Flatpak apps are managed by the `flatpaks` module.
+- Legacy alias `--modules=gnome` maps to `gnome-core,gnome-extensions`.
 
 ## 🔎 What Will Change On My System
 
-This section is an explicit contract of installer side effects for CachyOS/Arch and Fedora/Nobara.
+Scope: installer-managed side effects.
 
-### `gsettings` keys changed
+At a glance:
+- Writes GNOME `gsettings` for shortcuts/workspaces/theme/wallpaper.
+- Installs distro packages depending on selected modules.
+- Copies config/assets into user paths and creates timestamped backups.
+- May install Flatpaks, Cargo crates, and pip user packages.
+
+<details>
+<summary><strong>Full gsettings keys touched</strong></summary>
 
 When `gnome-core` actions are enabled, installer writes these keys:
 
@@ -184,9 +158,36 @@ If `gnome-extensions` actions are enabled and extensions are installed, installe
 - `org.gnome.shell.extensions.blur-my-shell.applications whitelist`
 - `org.gnome.shell.extensions.blur-my-shell.applications dynamic-opacity`
 
+</details>
+
+### Keyboard shortcut mapping (`gnome-core`)
+
+| Shortcut          | Application           | Command |
+|-------------------|-----------------------|---------|
+| `Super + 1..5`    | Switch workspace      | GNOME `switch-to-workspace-1..5` |
+| `Shift + Super + 1..5` | Move window to workspace | GNOME `move-to-workspace-1..5` |
+| `Alt + Tab`       | Switch windows        | GNOME `switch-windows` |
+| `Shift + Alt + Tab` | Switch windows (backward) | GNOME `switch-windows-backward` |
+| `Super + E`       | Files (Nautilus)      | `nautilus --new-window` |
+| `Super + Enter`   | Kitty Terminal        | `kitty` |
+| `Super + R`       | Btop                  | `kitty -e btop` |
+| `Super + B`       | Zen Browser           | `flatpak run app.zen_browser.zen` |
+| `Super + F9`      | OCR (NormCap)         | `/usr/bin/flatpak run com.github.dynobo.normcap` |
+| `Super + Ç`       | Runin in Kitty        | `kitty -e runin` |
+| `Super + Q`       | Close Active Window   | Closes the currently focused window |
+| `Shift + Super + L` | Shutdown            | GNOME media-keys `shutdown` action |
+| `Shift + Super + P` | Reboot              | GNOME media-keys `reboot` action |
+
+Note: the Runin shortcut uses GNOME key name `<Super>ccedilla` (layout-dependent, typically `Super + Ç` on Spanish keyboards).
+Note: the installer also clears `switch-applications` and `switch-applications-backward` (app-group Alt+Tab behavior).
+Note: workspace behavior is pinned to 5 static workspaces (`dynamic-workspaces=false`, `num-workspaces=5`).
+
 ### Packages installed (by module)
 
 Package installation is optional in the wizard and can be disabled with `--skip-packages`.
+
+<details>
+<summary><strong>Full package matrix</strong></summary>
 
 - `gnome-core`:
   - CachyOS/Arch: `gnome-tweaks`, `gnome-extensions-app`
@@ -206,6 +207,8 @@ Package installation is optional in the wizard and can be disabled with `--skip-
 - `media`:
   - CachyOS/Arch: `mpv`, `ffmpeg`, `libva-utils`, `mesa-vdpau-drivers`, `libva-intel-driver`
   - Fedora/Nobara: `mpv`, `ffmpeg`, `libva-utils`, `libva-vdpau-driver`, `intel-media-driver`
+- `flatpaks`:
+  - Curated bundle from `Scripts/installer/data/flatpaks.txt`
 - `language`:
   - CachyOS/Arch: `ibus`, `ibus-anthy`
   - Fedora/Nobara: `ibus`, `ibus-anthy`
@@ -217,9 +220,14 @@ Package installation is optional in the wizard and can be disabled with `--skip-
   - Fedora/Nobara: `flatpak`
 - Flatpak apps installed by installer actions:
   - `com.mattjakeman.ExtensionManager` (`gnome-extensions` action)
-  - Curated bundle from `Scripts/installer/data/flatpaks.txt` (optional installer step)
+  - Curated bundle from `Scripts/installer/data/flatpaks.txt` (`flatpaks` module)
+
+</details>
 
 ### Files and paths touched
+
+<details>
+<summary><strong>Full files/paths impact</strong></summary>
 
 - Creates/updates:
   - `~/.config`
@@ -230,6 +238,7 @@ Package installation is optional in the wizard and can be disabled with `--skip-
 - Copies repo assets/config into user paths:
   - `icons/*` -> `~/.local/share/icons/`
   - `wallpapers/*` -> `~/Pictures/wallpapers/`
+  - `themes/*` -> `~/.themes/` (only if `themes/` exists in repo)
   - `Fonts/*` -> `~/.local/share/fonts/`
   - `fish/` -> `~/.config/fish/`
   - `kitty/` -> `~/.config/kitty/`
@@ -247,9 +256,14 @@ Package installation is optional in the wizard and can be disabled with `--skip-
   - User group membership (`usermod -aG libvirt,kvm`)
   - Libvirt service enablement and default network state
 
+</details>
+
 ### Network actions
 
 When the corresponding module/action is enabled, installer may access:
+
+<details>
+<summary><strong>Full network actions list</strong></summary>
 
 - Distro package repositories via `pacman` (CachyOS/Arch) or `dnf` (Fedora/Nobara)
 - Flathub via `flatpak remote-add` and `flatpak install`
@@ -258,7 +272,12 @@ When the corresponding module/action is enabled, installer may access:
 - PyPI via `python3 -m pip install --user --upgrade gnome-extensions-cli`
 - GNOME extensions endpoints via GNOME Shell D-Bus install or `gext`
 
+</details>
+
 ### Idempotency Contract
+
+<details>
+<summary><strong>Idempotency details and caveats</strong></summary>
 
 - Safe to run multiple times: yes, with caveats below.
 - Package installs:
@@ -275,185 +294,21 @@ When the corresponding module/action is enabled, installer may access:
   - `cargo install ...`, `pip install --upgrade ...`, and network fetch/install steps may still download/rebuild/update
   - `fc-cache -fv` and service start commands may do repeat work even when already configured
 
+</details>
+
 ---
 
-## 🧱 Detailed Configs
+## 🧱 Customization Reference
 
-### GNOME Desktop Environment
+> Important: Everything below this point is **not** handled by `./Scripts/install.sh` unless a section explicitly says otherwise.
+Keep private values local (for example personal SSH aliases) instead of committing them.
 
-<details>
-<summary><strong>Show section</strong></summary>
-
-Recommended way:
-
-```bash
-./Scripts/install.sh
-```
-
-`gnome-core` configures:
-- Traditional Alt+Tab behavior (windows, not app groups)
-- Battery percentage in top bar
-- Workspace shortcuts (`Super+1-5`, `Super+Shift+1-5`)
-- Fixed 5 workspaces (dynamic workspaces disabled)
-- App launchers (`Super+E`, `Super+Enter`, etc.)
-- `Super+Q` for close-window
-- Theme defaults (dark mode, icon theme, cursor theme)
-- `gnome-extensions` applies extension install/enable and defaults (TopHat + Blur My Shell)
-
-Manual `gsettings` (optional, for incremental changes):
-
-```bash
-gsettings set org.gnome.desktop.wm.keybindings switch-windows "['<Alt>Tab']"
-gsettings set org.gnome.desktop.wm.keybindings switch-windows-backward "['<Shift><Alt>Tab']"
-gsettings set org.gnome.desktop.wm.keybindings switch-applications "[]"
-gsettings set org.gnome.desktop.wm.keybindings switch-applications-backward "[]"
-gsettings set org.gnome.desktop.interface show-battery-percentage true
-```
-
-Shortcut mapping used:
-
-| Shortcut       | Application          | Command |
-|----------------|----------------------|---------|
-| `Super + E`    | Files (Nautilus)     | `nautilus --new-window` |
-| `Super + Enter`| Kitty Terminal       | `kitty` |
-| `Super + R`    | Btop                 | `kitty -e btop` |
-| `Super + B`    | Zen Browser          | `flatpak run app.zen_browser.zen` |
-| `Super + F9`   | OCR (NormCap)        | `/usr/bin/flatpak run com.github.dynobo.normcap` |
-| `Super + Q`    | Close Active Window  | Closes the currently focused window |
-
-Visual style:
-
-1. Enable `gnome-core` in installer.
-2. Enable `gnome-extensions` for extension install/defaults.
-3. Optional: customize extension UUID list in `Scripts/installer/data/gnome_extensions.txt`.
-4. Re-run `gnome-extensions` to apply updated extension list/defaults.
-
-Included themes (`icons/`):
-
-| Component  | Theme                 | Installation |
-| ---------- | --------------------- | ------------ |
-| Icon Theme | MacTahoe-dark         | Copy to `~/.local/share/icons/` |
-| Cursor     | Bibata-Modern-Classic | Copy to `~/.local/share/icons/` |
-
-Install icons:
-
-```bash
-cp -r icons/* ~/.local/share/icons/
-```
-
-Install fonts:
-
-```bash
-mkdir -p ~/.local/share/fonts
-cp -r Fonts/* ~/.local/share/fonts/
-fc-cache -fv
-```
-
-Included fonts:
-- `Kaiti.ttf` and `yumin.ttf` (language learning)
-- `Fonts/NerdFonts/*` (terminal)
-
-Wallpaper:
-- Default: `wallpapers/background`
-- Set via desktop context menu (“Change Background”)
-
-GNOME extensions / Blur My Shell preview:
-
-<div align="center">
-  <img src="screenshots/extensions-view.png" alt="GNOME Extensions via Extension Manager" width="48%"/>
-  <img src="screenshots/blur-MyShell-config.png" alt="Blur My Shell Configuration" width="48%"/>
-</div>
-
-</details>
-
-### Terminal & CLI Tools
+### Anki & SpeechNote
 
 <details>
 <summary><strong>Show section</strong></summary>
 
-This setup uses Kitty + Fish + Starship + Fastfetch. The installer handles package installation and config copy.
-
-- Kitty
-  - Config: `~/.config/kitty/kitty.conf`
-  - Highlights: Wayland support, transparency/blur, borderless window, font resize shortcuts
-- Fish
-  - Set default shell: `chsh -s /usr/bin/fish`
-  - Config: `~/.config/fish/config.fish`
-  - Includes `fzf` key bindings and `up` abbreviation
-  - Rust CLI updater used by `up`: `cargo install cargo-update` (adds `cargo install-update -a` to update installed Cargo binaries in one command)
-- Starship
-  - Install (official): `curl -sS https://starship.rs/install.sh | sh -s -- -y -b "$HOME/.local/bin"`
-  - Config: `~/.config/starship.toml`
-- Fastfetch
-  - Config: `~/.config/fastfetch/config.jsonc`
-
-Distro notes:
-
-- Fish `up` abbreviation is distro-aware in this repo and works out-of-the-box for both Fedora-like and Arch/CachyOS systems.
-- CachyOS/Arch path includes `sudo limine-snapper-sync`; Fedora path does not.
-- Fastfetch image/logo in this setup is CachyOS-themed.
-- If you are not on CachyOS, update `~/.config/fastfetch/config.jsonc` logo/image to match your distro.
-
-</details>
-
-### Software & Applications
-
-<details>
-<summary><strong>Show section</strong></summary>
-
-Virtualization (QEMU/KVM):
-
-Recommended: enable the `virtualization` module in installer.
-
-Manual path (Arch example):
-
-1. Install packages:
-   ```bash
-   sudo pacman -S qemu-full virt-manager virt-viewer dnsmasq libguestfs ebtables vde2 openbsd-netcat libvirt edk2-ovmf swtpm
-   ```
-2. Add your user to groups:
-   ```bash
-   sudo usermod -aG libvirt,kvm $USER
-   ```
-3. Enable services:
-   ```bash
-   sudo systemctl enable --now libvirtd.socket
-   sudo systemctl enable --now libvirtd.service
-   ```
-4. Configure default network:
-   ```bash
-   sudo virsh net-autostart default
-   sudo virsh net-start default
-   ```
-5. Verify in Virt-Manager.
-
-Utilities, media, language:
-
-- NormCap (OCR)
-  - Install: `flatpak install flathub com.github.dynobo.normcap`
-  - Launch shortcut in this setup: `Super+F9`
-- MPV immersion config
-  - Install dependencies (Arch example):
-    ```bash
-    sudo pacman -S mpv ffmpeg
-    sudo pacman -S libva-intel-driver libva-utils mesa-vdpau-drivers
-    ```
-  - Copy config:
-    ```bash
-    cp -r mpv/ ~/.config/
-    ```
-- Japanese input (IBus + Anthy)
-  - Install (Arch example): `sudo pacman -S ibus-anthy ibus`
-  - Add method in `ibus-setup`
-  - Start daemon: `ibus-daemon -drx`
-
-Other Flatpaks:
-
-```bash
-flatpak install flathub net.ankiweb.Anki app.zen_browser.zen net.mkiol.SpeechNote org.qbittorrent.qBittorrent
-```
-
-Optional extras:
+Optional extras (not installer-managed):
 
 - Anki add-ons:
   1. Zoom for Anki 24 (`1923741581`)
@@ -470,6 +325,8 @@ Optional extras:
 
 <details>
 <summary><strong>Show section</strong></summary>
+
+Installer does not manage personal SSH aliases. Keep these local:
 
 SSH alias examples:
 
@@ -492,9 +349,11 @@ Optional (personal workflow): I also use [SSH Watchdog](https://extensions.gnome
 
 ---
 
-## 🟦 CachyOS
+## 🛠️ System Guides
 
-### System Optimization & Monitoring
+Scope: manual guides (not installer-managed).
+
+### Swap Usage Troubleshooting (Swappiness)
 
 <details>
 <summary><strong>Show section</strong></summary>
@@ -509,16 +368,16 @@ Swappiness (recommended for high-RAM systems):
 Performance tools:
 - MangoHud: `MANGOHUD=1`
 - Steam launch option: `MANGOHUD=1 gamemoderun %command%`
-- Btop install: `sudo pacman -S btop`
+- Btop: install with your distro package manager (`btop` package)
 
 </details>
 
-### Hardware & Storage
+### External Gaming Drive Setup (Windows NTFS)
 
 <details>
 <summary><strong>Show section</strong></summary>
 
-External NTFS game drive:
+External NTFS game drive (Windows-formatted):
 
 1. Find UUID: `sudo blkid`
 2. Create mount point: `sudo mkdir -p /mnt/gamedrive`
@@ -532,6 +391,8 @@ External NTFS game drive:
 ---
 
 ## 🎮 HP Omen
+
+Scope: manual guide (not installer-managed).
 
 <details>
 <summary><strong>Show section</strong></summary>
@@ -573,24 +434,33 @@ Included helper script:
 
 ### How to Use This Repo
 
-1. Clone: `git clone https://github.com/MiguelRegueiro/MyCachyOSDotFiles`
-2. Run `./Scripts/install.sh` and select the modules you want.
-3. Keep private values local (for example personal SSH aliases) instead of committing them.
-4. Re-run installer anytime; existing config is backed up before overwrite.
-5. Use `--dry-run` to test changes before applying.
+1. Use `./Scripts/install.sh` as the single entrypoint.
+2. Use `--dry-run` to force preview mode (or choose dry-run in the guided wizard).
+3. Re-run installer anytime; existing config is backed up before overwrite.
+
+Compatibility notes:
+- These configs are CachyOS-focused, but installer logic supports Arch-based and Fedora systems.
+- Some parts may require extra packages such as `ntfs-3g`, `gamemode`, or `mangohud`.
 
 ### Backup & Restore
 
-- Each installer run creates a timestamped backup dir:
-  - `~/.config-backups/mycachyosdotfiles_<timestamp>/`
-- The installer summary prints:
+Installer summary output at end of run includes:
+- Status counts: `completed`, `skipped`, `failed`
+- Module recap: completed/skipped modules (and rerun hint for skipped modules)
+- Sample lists of failed/completed/skipped actions
+- Fish shell change note (when applicable)
+- Paths/context:
   - `User`
   - `Home`
   - `Log file`
   - `Backup dir`
-- `install.log` is written at repo root each run and recreated on next run.
+
+Installer behavior:
+- `install.log` is written at repo root and recreated each run.
+- Each installer run creates a timestamped backup dir:
+  - `~/.config-backups/mycachyosdotfiles_<timestamp>/`
 - Backups include existing targets before replacement actions (for example `~/.config/fish`, `~/.config/kitty`, `~/.config/fastfetch`, `~/.config/mpv`, `~/.config/starship.toml`).
-- Merge-style copy actions (icons/wallpapers/fonts) sync contents into destination and do not snapshot every overwritten file individually.
+- Merge-style copy actions (icons/wallpapers/themes/fonts) sync contents into destination and do not snapshot every overwritten file individually.
 
 Restore examples:
 
@@ -608,11 +478,4 @@ cp -a "$BACKUP_DIR"/. "$HOME"/
 ### 📄 License & Third-Party Assets
 
 - Repo-level configuration/scripts are licensed under [LICENSE](LICENSE).
-- Third-party bundled assets (fonts/icons/wallpapers/logos) may use different licenses.
-- Third-party assets are not claimed as repository-authored work.
-- Upstream notices bundled with themes are preserved (for example `icons/MacTahoe/COPYING` and `icons/MacTahoe/AUTHORS`).
-
-### Notes & Compatibility
-
-- These configs were built for CachyOS but installer logic supports Fedora and Arch-based systems.
-- Some parts may require extra packages such as `ntfs-3g`, `gamemode`, or `mangohud`.
+- Bundled third-party assets (fonts/icons/wallpapers/logos) may use different licenses, and upstream notices are preserved (for example `icons/MacTahoe/COPYING` and `icons/MacTahoe/AUTHORS`).
