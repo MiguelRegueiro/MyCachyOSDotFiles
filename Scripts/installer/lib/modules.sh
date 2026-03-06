@@ -193,6 +193,32 @@ ensure_flatpak_available() {
   run_root_cmd "$cmd"
 }
 
+ensure_flathub_remote() {
+  local flathub_url="https://flathub.org/repo/flathub.flatpakrepo"
+
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    run_cmd "flatpak remote-add --if-not-exists flathub $flathub_url"
+    return 0
+  fi
+
+  # If flathub already exists, keep it and normalize URL when possible.
+  if flatpak remotes --columns=name 2>/dev/null | grep -qx "flathub"; then
+    run_cmd_soft "flatpak remote-modify --if-exists flathub --url=\"$flathub_url\"" || true
+    record_completed "flatpak:flathub-remote-present"
+    return 0
+  fi
+
+  run_cmd_soft "flatpak remote-add --if-not-exists flathub \"$flathub_url\"" || true
+  if flatpak remotes --columns=name 2>/dev/null | grep -qx "flathub"; then
+    record_completed "flatpak:flathub-remote-added"
+    return 0
+  fi
+
+  record_failed "flatpak:flathub-remote-missing"
+  warn "Could not configure flathub remote."
+  return 1
+}
+
 install_flatpak_bundle() {
   print_section "Flatpak apps"
   log "Curated apps count: ${#FLATPAK_APPS[@]}"
@@ -202,7 +228,9 @@ install_flatpak_bundle() {
     return 1
   fi
 
-  run_cmd "flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo"
+  if ! ensure_flathub_remote; then
+    return 1
+  fi
   run_cmd "flatpak install -y flathub ${FLATPAK_APPS[*]}"
   record_completed "flatpak:bundle"
 }
@@ -212,7 +240,9 @@ install_gnome_extension_manager_flatpak() {
     warn "Flatpak unavailable; cannot install GNOME Extension Manager."
     return 1
   fi
-  run_cmd "flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo"
+  if ! ensure_flathub_remote; then
+    return 1
+  fi
   run_cmd "flatpak install -y flathub com.mattjakeman.ExtensionManager"
   record_completed "flatpak:gnome-extension-manager"
 }
