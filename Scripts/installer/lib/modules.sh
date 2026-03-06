@@ -203,7 +203,7 @@ ensure_flathub_remote() {
 
   # If flathub already exists, keep it and normalize URL when possible.
   if flatpak remotes --columns=name 2>/dev/null | grep -qx "flathub"; then
-    run_cmd_soft "flatpak remote-modify --if-exists flathub --url=\"$flathub_url\"" || true
+    run_cmd_soft "flatpak remote-modify flathub --url=\"$flathub_url\"" || true
     record_completed "flatpak:flathub-remote-present"
     return 0
   fi
