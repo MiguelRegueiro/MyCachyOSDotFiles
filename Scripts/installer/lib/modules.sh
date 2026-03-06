@@ -151,10 +151,10 @@ apply_gnome_shortcuts_from_installer() {
   set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom4/" "command" "'/usr/bin/flatpak run com.github.dynobo.normcap'"
   set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom4/" "binding" "'<Super>F9'"
 
-  # Super+ç: Runin in Kitty
+  # Shift+Super+Enter: Runin in Kitty (layout-independent)
   set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom5/" "name" "'runin'"
   set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom5/" "command" "'kitty -e runin'"
-  set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom5/" "binding" "'<Super>ccedilla'"
+  set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom5/" "binding" "'<Shift><Super>Return'"
 
   # Super+Q close window
   set_gsettings_safe "$wm_schema" "close" "\"['<Super>q']\""

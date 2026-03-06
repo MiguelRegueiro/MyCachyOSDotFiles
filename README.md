@@ -192,14 +192,12 @@ If `gnome-extensions` actions are enabled and extensions are installed, installe
 | `Super + R`       | Btop                  | `kitty -e btop` |
 | `Super + B`       | Zen Browser           | `flatpak run app.zen_browser.zen` |
 | `Super + F9`      | OCR (NormCap)         | `/usr/bin/flatpak run com.github.dynobo.normcap` |
-| `Super + Ç`       | runin (smart command launcher) | `kitty -e runin` |
+| `Shift + Super + Enter` | runin (smart command launcher) | `kitty -e runin` |
 | `Super + Q`       | Close Active Window   | Closes the currently focused window |
 | `Shift + Super + L` | Shutdown            | GNOME media-keys `shutdown` action |
 | `Shift + Super + P` | Reboot              | GNOME media-keys `reboot` action |
 
 > [!TIP]
-> - `runin` uses the GNOME key name `<Super>ccedilla` (`Super + Ç` on Spanish keyboards). This is convenient because Ç is near Enter, and `Super + Enter` already opens the terminal.
-> - On keyboards without `Ç` (e.g., US layout), you can remap the launcher to another key such as `Super + \` or any preferred shortcut.
 > - Alt+Tab is forced to window-switcher mode (window previews + icons) by setting `switch-windows` and clearing `switch-applications`/`switch-applications-backward`.
 > - Workspaces are pinned to 5 static workspaces (`dynamic-workspaces=false`, `num-workspaces=5`).
 
