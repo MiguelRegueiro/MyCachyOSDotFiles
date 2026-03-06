@@ -284,13 +284,28 @@ install_gnome_extensions_bundle() {
     gext_cmd="$HOME/.local/bin/gext"
   fi
   if [[ -z "$gext_cmd" && "$SKIP_PACKAGES" -eq 0 ]]; then
-    log "gext missing. Installing gnome-extensions-cli with pip (user install)..."
+    log "gext missing. Installing gnome-extensions-cli with pipx (PEP 668 compatible)..."
     if [[ "$PKG_KIND" == "arch" ]]; then
-      install_packages "gnome-extensions-cli-deps" python-pip || true
+      install_packages "gnome-extensions-cli-deps" python-pipx || true
     else
-      install_packages "gnome-extensions-cli-deps" python3-pip || true
+      install_packages "gnome-extensions-cli-deps" pipx || true
     fi
-    run_cmd_soft "python3 -m pip install --user --upgrade gnome-extensions-cli" || true
+    local pipx_cmd=""
+    if command -v pipx >/dev/null 2>&1; then
+      pipx_cmd="pipx"
+    elif [[ -x "$HOME/.local/bin/pipx" ]]; then
+      pipx_cmd="$HOME/.local/bin/pipx"
+    fi
+
+    if [[ -n "$pipx_cmd" ]]; then
+      run_cmd_soft "\"$pipx_cmd\" install --force gnome-extensions-cli" || true
+      run_cmd_soft "\"$pipx_cmd\" ensurepath" || true
+    elif [[ "$DRY_RUN" -eq 1 ]]; then
+      run_cmd "pipx install --force gnome-extensions-cli"
+      run_cmd_soft "pipx ensurepath" || true
+    else
+      warn "pipx not found after dependency install; cannot auto-install gext."
+    fi
     if command -v gext >/dev/null 2>&1; then
       gext_cmd="gext"
     elif [[ -x "$HOME/.local/bin/gext" ]]; then
@@ -679,7 +694,22 @@ module_media() {
   print_section "Module: media"
 
   if [[ "$PKG_KIND" == "arch" ]]; then
-    install_packages "media" mpv ffmpeg libva-utils mesa-vdpau-drivers libva-intel-driver || true
+    install_packages "media" mpv ffmpeg libva-utils libva-intel-driver || true
+
+    # VDPAU package naming can vary across Arch-based repos (including CachyOS).
+    local vdpau_pkg=""
+    if check_root_cmd "pacman -Si mesa-vdpau-drivers"; then
+      vdpau_pkg="mesa-vdpau-drivers"
+    elif check_root_cmd "pacman -Si libva-vdpau-driver"; then
+      vdpau_pkg="libva-vdpau-driver"
+    fi
+
+    if [[ -n "$vdpau_pkg" ]]; then
+      install_packages "media-vdpau" "$vdpau_pkg" || true
+    else
+      log "No known VDPAU package variant found in current repos; skipping optional VDPAU package."
+      record_skipped "packages:media-vdpau:unavailable"
+    fi
   elif [[ "$PKG_KIND" == "fedora" ]]; then
     install_packages "media" mpv ffmpeg libva-utils libva-vdpau-driver intel-media-driver || true
   else

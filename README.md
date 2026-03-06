@@ -217,8 +217,8 @@ Package installation is optional in the wizard and can be disabled with `--skip-
   - Flatpak app: `com.mattjakeman.ExtensionManager`
   - GNOME extensions from `Scripts/installer/data/gnome_extensions.txt`
   - GNOME extensions CLI dependency when needed:
-    - CachyOS/Arch: `python-pip`
-    - Fedora/Nobara: `python3-pip`
+    - CachyOS/Arch: `python-pipx`
+    - Fedora/Nobara: `pipx`
 - `terminal`:
   - CachyOS/Arch: `fish`, `kitty`, `fastfetch`, `fzf`, `btop`, `cargo`, `fd`
   - Fedora/Nobara: `fish`, `kitty`, `fastfetch`, `fzf`, `btop`, `cargo`, `fd-find`
@@ -291,7 +291,7 @@ The installer may use network access for enabled modules/actions:
 - Flathub (`flatpak remote-add`, `flatpak install`)
 - Starship installer (`curl` from `starship.rs`)
 - Cargo crates (`cargo install` for `cargo-update`, `runin`)
-- PyPI (`python3 -m pip install --user --upgrade gnome-extensions-cli`)
+- PyPI (via `pipx install gnome-extensions-cli`)
 - GNOME extension downloads (GNOME Shell D-Bus install or `gext`)
 
 </details>
