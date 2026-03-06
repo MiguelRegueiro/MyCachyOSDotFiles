@@ -225,7 +225,7 @@ Package installation is optional in the wizard and can be disabled with `--skip-
     - CachyOS/Arch: `openssl`, `pkgconf`, `base-devel`
     - Fedora/Nobara: `openssl-devel`, `pkgconf-pkg-config`, `gcc`, `make`
 - `media`:
-  - CachyOS/Arch: `mpv`, `ffmpeg`, `libva-utils`, `mesa-vdpau-drivers`, `libva-intel-driver`
+  - CachyOS/Arch: `mpv`, `ffmpeg`, `libva-utils`, `libva-intel-driver`
   - Fedora/Nobara: `mpv`, `ffmpeg`, `libva-utils`, `libva-vdpau-driver`, `intel-media-driver`
 - `flatpaks`:
   - Curated bundle from `Scripts/installer/data/flatpaks.txt`

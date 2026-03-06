@@ -704,21 +704,6 @@ module_media() {
 
   if [[ "$PKG_KIND" == "arch" ]]; then
     install_packages "media" mpv ffmpeg libva-utils libva-intel-driver || true
-
-    # VDPAU package naming can vary across Arch-based repos (including CachyOS).
-    local vdpau_pkg=""
-    if check_root_cmd "pacman -Si mesa-vdpau-drivers"; then
-      vdpau_pkg="mesa-vdpau-drivers"
-    elif check_root_cmd "pacman -Si libva-vdpau-driver"; then
-      vdpau_pkg="libva-vdpau-driver"
-    fi
-
-    if [[ -n "$vdpau_pkg" ]]; then
-      install_packages "media-vdpau" "$vdpau_pkg" || true
-    else
-      log "No known VDPAU package variant found in current repos; skipping optional VDPAU package."
-      record_skipped "packages:media-vdpau:unavailable"
-    fi
   elif [[ "$PKG_KIND" == "fedora" ]]; then
     install_packages "media" mpv ffmpeg libva-utils libva-vdpau-driver intel-media-driver || true
   else
