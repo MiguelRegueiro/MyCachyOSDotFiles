@@ -456,10 +456,6 @@ Included helper script:
 3. Re-run installer anytime; existing config is backed up before overwrite.
 4. For manual-only items, see **Manual Customization Reference** and **System Guides**.
 
-Compatibility notes:
-- These configs are CachyOS-focused, but installer logic supports Arch-based and Fedora systems.
-- Some parts may require extra packages such as `ntfs-3g`, `gamemode`, or `mangohud`.
-
 ### Backup & Restore
 
 Installer summary output at end of run includes:
