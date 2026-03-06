@@ -449,12 +449,15 @@ Included helper script:
 
 ## ℹ️ Usage & Maintenance
 
-### How to Use This Repo
+### Usage
 
-1. Use `./Scripts/install.sh` as the single entrypoint.
-2. Use `--dry-run` to force preview mode (or choose dry-run in the guided wizard).
-3. Re-run installer anytime; existing config is backed up before overwrite.
-4. For manual-only items, see **Manual Customization Reference** and **System Guides**.
+Run the installer:
+
+```bash
+./Scripts/install.sh
+```
+
+Use `--dry-run` to preview changes. The installer is safe to rerun and creates backups automatically.
 
 ### Backup & Restore
 
