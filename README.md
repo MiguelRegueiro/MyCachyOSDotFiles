@@ -30,7 +30,7 @@ Modules can be applied selectively, allowing you to install only the components 
 - **CachyOS-themed defaults** that can be customized (Fastfetch/logo)
 - **Language/media workflow** (Japanese input via Anthy, MPV setup, optional Anki extras)
 - **System tooling** (virtualization stack, media setup, developer utilities)
-- **Safe to rerun** with backups and idempotent configuration
+- **Safe to rerun** with automatic backups and idempotent configuration
 
 ---
 
@@ -52,7 +52,9 @@ Optional preview mode (no changes):
 
 You can also run `./Scripts/install.sh` and choose dry-run in the guided wizard.
 
-> The installer is the main entrypoint for this repo. Manual-only sections are documented below (for example Anki/SpeechNote tweaks, SSH aliases, system guides, and HP Omen notes).
+> - The installer is safe to rerun and automatically backs up existing configuration before overwriting files.
+>
+> - The installer is the main entrypoint for this repo. Manual-only sections are documented below (Anki and SpeechNote tweaks, SSH aliases, system guides, and HP Omen notes).
 
 <details>
 <summary><strong>Common flags</strong></summary>
@@ -79,7 +81,7 @@ Example:
 
 ## 🧭 Installer Workflow (What It Does)
 
-Done by installer: this section is applied by `./Scripts/install.sh`.
+This section describes what is applied by `./Scripts/install.sh`.
 
 Execution order:
 
@@ -447,19 +449,8 @@ Included helper script:
 
 ---
 
-## ℹ️ Usage & Maintenance
+## ℹ️ Backup & Restore
 
-### Usage
-
-Run the installer:
-
-```bash
-./Scripts/install.sh
-```
-
-Use `--dry-run` to preview changes. The installer is safe to rerun and creates backups automatically.
-
-### Backup & Restore
 
 Installer summary output at end of run includes:
 - Status counts: `completed`, `skipped`, `failed`
