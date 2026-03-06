@@ -243,8 +243,16 @@ install_gnome_extension_manager_flatpak() {
   if ! ensure_flathub_remote; then
     return 1
   fi
-  run_cmd "flatpak install -y flathub com.mattjakeman.ExtensionManager"
-  record_completed "flatpak:gnome-extension-manager"
+  if [[ "$DRY_RUN" -eq 0 ]] && flatpak info com.mattjakeman.ExtensionManager >/dev/null 2>&1; then
+    record_completed "flatpak:gnome-extension-manager:already-installed"
+    return 0
+  fi
+
+  if run_cmd_soft "flatpak install -y flathub com.mattjakeman.ExtensionManager"; then
+    record_completed "flatpak:gnome-extension-manager"
+  else
+    record_skipped "flatpak:gnome-extension-manager:install-failed"
+  fi
 }
 
 install_gnome_extensions_bundle() {
