@@ -198,19 +198,19 @@ ensure_flathub_remote() {
   local flathub_url="https://flathub.org/repo/flathub.flatpakrepo"
 
   if [[ "$DRY_RUN" -eq 1 ]]; then
-    run_cmd "flatpak remote-add --if-not-exists flathub $flathub_url"
+    run_cmd "flatpak --user remote-add --if-not-exists flathub $flathub_url"
     return 0
   fi
 
   # If flathub already exists, keep it and normalize URL when possible.
-  if flatpak remotes --columns=name 2>/dev/null | grep -qx "flathub"; then
-    run_cmd_soft "flatpak remote-modify flathub --url=\"$flathub_url\"" || true
+  if flatpak --user remotes --columns=name 2>/dev/null | grep -qx "flathub"; then
+    run_cmd_soft "flatpak --user remote-modify flathub --url=\"$flathub_url\"" || true
     record_completed "flatpak:flathub-remote-present"
     return 0
   fi
 
-  run_cmd_soft "flatpak remote-add --if-not-exists flathub \"$flathub_url\"" || true
-  if flatpak remotes --columns=name 2>/dev/null | grep -qx "flathub"; then
+  run_cmd_soft "flatpak --user remote-add --if-not-exists flathub \"$flathub_url\"" || true
+  if flatpak --user remotes --columns=name 2>/dev/null | grep -qx "flathub"; then
     record_completed "flatpak:flathub-remote-added"
     return 0
   fi
@@ -232,7 +232,7 @@ install_flatpak_bundle() {
   if ! ensure_flathub_remote; then
     return 1
   fi
-  run_cmd "flatpak install -y flathub ${FLATPAK_APPS[*]}"
+  run_cmd "flatpak --user install -y flathub ${FLATPAK_APPS[*]}"
   record_completed "flatpak:bundle"
 }
 
@@ -244,12 +244,12 @@ install_gnome_extension_manager_flatpak() {
   if ! ensure_flathub_remote; then
     return 1
   fi
-  if [[ "$DRY_RUN" -eq 0 ]] && flatpak info com.mattjakeman.ExtensionManager >/dev/null 2>&1; then
+  if [[ "$DRY_RUN" -eq 0 ]] && flatpak --user info com.mattjakeman.ExtensionManager >/dev/null 2>&1; then
     record_completed "flatpak:gnome-extension-manager:already-installed"
     return 0
   fi
 
-  if run_cmd_soft "flatpak install -y flathub com.mattjakeman.ExtensionManager"; then
+  if run_cmd_soft "flatpak --user install -y flathub com.mattjakeman.ExtensionManager"; then
     record_completed "flatpak:gnome-extension-manager"
   else
     record_skipped "flatpak:gnome-extension-manager:install-failed"
