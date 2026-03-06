@@ -122,6 +122,7 @@ apply_gnome_shortcuts_from_installer() {
   # Theme defaults
   set_gsettings_safe "org.gnome.desktop.interface" "cursor-theme" "'Bibata-Modern-Classic'"
   set_gsettings_safe "org.gnome.desktop.interface" "icon-theme" "'MacTahoe-dark'"
+  set_gsettings_safe "org.gnome.desktop.interface" "gtk-theme" "'adw-gtk3-dark'"
 
   # Custom launcher slots
   set_gsettings_safe "$media_schema" "custom-keybindings" "\"['$base_path/custom0/', '$base_path/custom1/', '$base_path/custom2/', '$base_path/custom3/', '$base_path/custom4/', '$base_path/custom5/']\""
@@ -869,7 +870,13 @@ module_virtualization() {
 
 module_gnome_core() {
   print_section "Module: gnome-core"
-  install_packages "gnome-core" gnome-tweaks gnome-extensions-app || true
+  if [[ "$PKG_KIND" == "arch" ]]; then
+    install_packages "gnome-core" gnome-tweaks gnome-extensions-app adw-gtk-theme || true
+  elif [[ "$PKG_KIND" == "fedora" ]]; then
+    install_packages "gnome-core" gnome-tweaks gnome-extensions-app adw-gtk3-theme || true
+  else
+    install_packages "gnome-core" gnome-tweaks gnome-extensions-app || true
+  fi
 
   if ! is_gnome_session; then
     warn "GNOME session not detected. GNOME-specific actions may fail."

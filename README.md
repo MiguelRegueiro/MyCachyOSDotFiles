@@ -141,6 +141,7 @@ When `gnome-core` actions are enabled, installer writes these keys:
 - `org.gnome.desktop.interface color-scheme`
 - `org.gnome.desktop.interface cursor-theme`
 - `org.gnome.desktop.interface icon-theme`
+- `org.gnome.desktop.interface gtk-theme`
 - `org.gnome.settings-daemon.plugins.media-keys custom-keybindings`
 - `org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ name`
 - `org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ command`
@@ -209,8 +210,8 @@ Package installation is optional in the wizard and can be disabled with `--skip-
 <summary><strong>Full package matrix</strong></summary>
 
 - `gnome-core`:
-  - CachyOS/Arch: `gnome-tweaks`, `gnome-extensions-app`
-  - Fedora/Nobara: `gnome-tweaks`, `gnome-extensions-app`
+  - CachyOS/Arch: `gnome-tweaks`, `gnome-extensions-app`, `adw-gtk-theme`
+  - Fedora/Nobara: `gnome-tweaks`, `gnome-extensions-app`, `adw-gtk3-theme`
 - `gnome-extensions`:
   - Flatpak app: `com.mattjakeman.ExtensionManager`
   - GNOME extensions from `Scripts/installer/data/gnome_extensions.txt`
