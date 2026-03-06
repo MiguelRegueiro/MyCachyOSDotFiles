@@ -1,5 +1,9 @@
 # 🚀 MyCachyOSDotFiles
 
+![CachyOS/Arch-based](https://img.shields.io/badge/CachyOS%2FArch--based-24292f?style=flat&logo=arch-linux&logoColor=58a6ff)
+![Fedora/Nobara](https://img.shields.io/badge/Fedora%2FNobara-24292f?style=flat&logo=fedora&logoColor=51A2DA)
+![GNOME](https://img.shields.io/badge/GNOME-24292f?style=flat&logo=gnome&logoColor=4A86CF)
+
 <div align="center">
 
 <img src="screenshots/screenshot-terminal-blur.png" alt="My GNOME Desktop with Kitty Terminal on CachyOS" width="48%"/>
@@ -10,7 +14,7 @@
 
 <br>
 
-A CachyOS-focused GNOME dotfiles setup with a modular installer that automates desktop and system configuration, with support for Arch-based and Fedora systems.
+A CachyOS-focused GNOME dotfiles setup with a modular installer that automates desktop and system configuration, supporting **Arch-based** and **Fedora** systems.
 
 Modules can be applied selectively, allowing you to install only the components you need.
 
@@ -192,10 +196,11 @@ If `gnome-extensions` actions are enabled and extensions are installed, installe
 | `Shift + Super + L` | Shutdown            | GNOME media-keys `shutdown` action |
 | `Shift + Super + P` | Reboot              | GNOME media-keys `reboot` action |
 
-Notes:
-- `runin` uses GNOME key name `<Super>ccedilla` (usually `Super + Ç` on Spanish keyboards). This is convenient because `Ç` is near Enter, and `Super + Enter` already opens the terminal.
-- Alt+Tab is forced to window-switcher mode (window previews + icons) by setting `switch-windows` and clearing `switch-applications`/`switch-applications-backward` (disables app-group/icon-only Alt+Tab behavior).
-- Workspace behavior is pinned to 5 static workspaces (`dynamic-workspaces=false`, `num-workspaces=5`).
+> [!TIP]
+> - `runin` uses the GNOME key name `<Super>ccedilla` (`Super + Ç` on Spanish keyboards). This is convenient because Ç is near Enter, and `Super + Enter` already opens the terminal.
+> - On keyboards without `Ç` (e.g., US layout), you can remap the launcher to another key such as `Super + \` or any preferred shortcut.
+> - Alt+Tab is forced to window-switcher mode (window previews + icons) by setting `switch-windows` and clearing `switch-applications`/`switch-applications-backward`.
+> - Workspaces are pinned to 5 static workspaces (`dynamic-workspaces=false`, `num-workspaces=5`).
 
 ### Packages installed (by module)
 
@@ -276,6 +281,9 @@ Package installation is optional in the wizard and can be disabled with `--skip-
 
 ### Network Access (Installer)
 
+<details>
+<summary><strong>Show section</strong></summary>
+
 The installer may use network access for enabled modules/actions:
 
 - Distro package repos (`pacman` on Arch/CachyOS, `dnf` on Fedora/Nobara)
@@ -284,6 +292,8 @@ The installer may use network access for enabled modules/actions:
 - Cargo crates (`cargo install` for `cargo-update`, `runin`)
 - PyPI (`python3 -m pip install --user --upgrade gnome-extensions-cli`)
 - GNOME extension downloads (GNOME Shell D-Bus install or `gext`)
+
+</details>
 
 ### Installer Re-run Behavior
 
@@ -313,9 +323,8 @@ Expected effects each run:
 
 ## 🧱 Manual Customization Reference
 
-> [!WARNING]
-> The items in this section are documented manual steps and are **not** handled by `./Scripts/install.sh`.
-> Keep private values local (for example personal SSH aliases) instead of committing them.
+> [!NOTE]
+> The following sections describe manual configuration steps that are **not managed by the installer**.
 
 ### Anki & SpeechNote
 
@@ -359,12 +368,9 @@ Optional (personal workflow): I also use [SSH Watchdog](https://extensions.gnome
 
 </details>
 
----
+
 
 ## 🛠️ System Guides
-
-> [!NOTE]
-> These guides are manual and not done by `./Scripts/install.sh`.
 
 ### Swap Usage Troubleshooting (Swappiness)
 
@@ -401,12 +407,9 @@ External NTFS game drive (Windows-formatted):
 
 </details>
 
----
+
 
 ## 🎮 HP Omen
-
-> [!NOTE]
-> This guide is manual and not done by `./Scripts/install.sh`.
 
 <details>
 <summary><strong>Show section</strong></summary>
