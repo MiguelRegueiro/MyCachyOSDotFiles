@@ -96,16 +96,17 @@ Execution order:
 |---|---|
 | `base` | user dirs, icons, wallpapers, optional themes, fonts, font cache |
 | `gnome-core` | GNOME keybindings/workspaces/theme defaults/wallpaper |
-| `gnome-extensions` | Extension Manager, extension install/enable, TopHat + Blur My Shell defaults |
+| `gnome-extensions` | Extension Manager, extension install/enable (best effort when `gnome-extensions` CLI is unavailable), TopHat + Blur My Shell defaults |
 | `terminal` | Fish/Kitty/Fastfetch/Starship config and helper CLI installs |
 | `media` | media packages + MPV config |
 | `flatpaks` | curated Flatpak app bundle from `Scripts/installer/data/flatpaks.txt` |
 | `language` | IBus + Anthy setup (adds Japanese (Anthy) as an additional keyboard layout) |
-| `virtualization` | QEMU/KVM + virt-manager + libvirt (optional groups/services/network actions) |
+| `virtualization` | QEMU/KVM + virt-manager + libvirt (optional groups/services/network actions, distro-aware service units) |
 
 Notes:
 - Curated Flatpak apps are managed by the `flatpaks` module.
 - Legacy alias `--modules=gnome` maps to `gnome-core,gnome-extensions`.
+- `virtualization` uses distro-aware libvirt activation (`libvirtd.socket` when available, otherwise modular sockets like `virtqemud.socket`) and uses `virsh -c qemu:///system` for network actions.
 
 ## 🔎 What Will Change On My System
 
@@ -274,8 +275,8 @@ Package installation is optional in the wizard and can be disabled with `--skip-
   - `~/.local/share/gnome-shell/extensions/` (GNOME extension installs)
   - `/etc/shells` (adds fish path if missing)
   - User account shell (`chsh`)
-  - User group membership (`usermod -aG libvirt,kvm`)
-  - Libvirt service enablement and default network state
+  - User group membership (`usermod -aG ...` for available virtualization groups such as `libvirt`/`kvm`)
+  - Libvirt service/socket enablement and default network state (may define `default` from `/usr/share/libvirt/networks/default.xml` when missing)
 
 </details>
 

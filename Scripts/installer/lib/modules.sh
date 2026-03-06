@@ -240,9 +240,11 @@ install_gnome_extensions_bundle() {
     return 0
   fi
 
-  if ! command -v gnome-extensions >/dev/null 2>&1; then
-    warn "gnome-extensions command not found; skipping extension enable step."
-    return 0
+  local has_gnome_extensions_cmd=0
+  if command -v gnome-extensions >/dev/null 2>&1; then
+    has_gnome_extensions_cmd=1
+  else
+    log "gnome-extensions command not found; install verification/enable will be best-effort."
   fi
 
   local gext_cmd=""
@@ -280,7 +282,7 @@ install_gnome_extensions_bundle() {
       else
         local tries=0
         while [[ "$tries" -lt 20 ]]; do
-          if gnome-extensions info "$uuid" >/dev/null 2>&1; then
+          if [[ "$has_gnome_extensions_cmd" -eq 1 ]] && gnome-extensions info "$uuid" >/dev/null 2>&1; then
             installed=1
             break
           fi
@@ -300,9 +302,9 @@ install_gnome_extensions_bundle() {
     fi
 
     if [[ "$DRY_RUN" -eq 0 ]]; then
-      if gnome-extensions info "$uuid" >/dev/null 2>&1; then
+      if [[ "$has_gnome_extensions_cmd" -eq 1 ]] && gnome-extensions info "$uuid" >/dev/null 2>&1; then
         installed=1
-      elif gnome-extensions list | grep -qx "$uuid"; then
+      elif [[ "$has_gnome_extensions_cmd" -eq 1 ]] && gnome-extensions list | grep -qx "$uuid"; then
         installed=1
       elif [[ -d "$extension_dir/$uuid" ]]; then
         installed=1
@@ -316,7 +318,11 @@ install_gnome_extensions_bundle() {
       continue
     fi
 
-    run_cmd_soft "gnome-extensions enable \"$uuid\"" || true
+    if [[ "$has_gnome_extensions_cmd" -eq 1 ]]; then
+      run_cmd_soft "gnome-extensions enable \"$uuid\"" || true
+    else
+      record_skipped "gnome-extension:enable-missing-cli:$uuid"
+    fi
   done
 
   if [[ "$failed_count" -gt 0 ]]; then
@@ -331,13 +337,15 @@ configure_tophat_defaults() {
   local schema="org.gnome.shell.extensions.tophat"
 
   if [[ ! -d "$schema_dir" ]]; then
-    warn "TopHat schema directory not found; skipping TopHat defaults."
+    log "TopHat schema directory not found; skipping TopHat defaults."
+    record_skipped "gnome:tophat-defaults-schema-missing"
     return 1
   fi
 
   local keys
   if ! keys="$(gsettings --schemadir "$schema_dir" list-keys "$schema" 2>/dev/null)"; then
-    warn "TopHat schema not readable; skipping TopHat defaults."
+    log "TopHat schema not readable; skipping TopHat defaults."
+    record_skipped "gnome:tophat-defaults-schema-unreadable"
     return 1
   fi
 
@@ -369,13 +377,15 @@ configure_blur_my_shell_defaults() {
   local schema="org.gnome.shell.extensions.blur-my-shell.applications"
 
   if [[ ! -d "$schema_dir" ]]; then
-    warn "Blur My Shell schema directory not found; skipping Blur My Shell defaults."
+    log "Blur My Shell schema directory not found; skipping Blur My Shell defaults."
+    record_skipped "gnome:blur-my-shell-defaults-schema-missing"
     return 1
   fi
 
   local keys
   if ! keys="$(gsettings --schemadir "$schema_dir" list-keys "$schema" 2>/dev/null)"; then
-    warn "Blur My Shell schema not readable; skipping Blur My Shell defaults."
+    log "Blur My Shell schema not readable; skipping Blur My Shell defaults."
+    record_skipped "gnome:blur-my-shell-defaults-schema-unreadable"
     return 1
   fi
 
@@ -715,23 +725,72 @@ module_virtualization() {
     warn "Unknown distro package mapping for virtualization module."
   fi
 
-  if confirm_action "Add user '$USER' to libvirt and kvm groups"; then
-    run_root_cmd "usermod -aG libvirt,kvm \"$USER\"" || true
+  if confirm_action "Add user '$USER' to libvirt and kvm groups (when available)"; then
+    local groups=()
+    if getent group libvirt >/dev/null 2>&1; then
+      groups+=("libvirt")
+    fi
+    if getent group kvm >/dev/null 2>&1; then
+      groups+=("kvm")
+    fi
+
+    if [[ "${#groups[@]}" -eq 0 ]]; then
+      warn "Neither libvirt nor kvm group exists on this system; skipping usermod."
+      record_skipped "virtualization:groups-missing"
+    else
+      local group_csv
+      group_csv="$(IFS=,; echo "${groups[*]}")"
+      run_root_cmd "usermod -aG \"$group_csv\" \"$USER\"" || true
+    fi
   fi
 
-  if confirm_action "Enable and start libvirtd service/socket"; then
-    run_root_cmd "systemctl enable --now libvirtd.socket" || true
-    run_root_cmd "systemctl enable --now libvirtd.service" || true
+  if confirm_action "Enable and start libvirt services/sockets (distro-aware)"; then
+    local enabled_any=0
+
+    if [[ -e /usr/lib/systemd/system/libvirtd.socket || -e /etc/systemd/system/libvirtd.socket ]]; then
+      run_root_cmd_soft "systemctl enable --now libvirtd.socket" || true
+      enabled_any=1
+    fi
+
+    if [[ "$enabled_any" -eq 0 ]]; then
+      local unit
+      local modular_units=(
+        "virtqemud.socket"
+        "virtnetworkd.socket"
+        "virtlogd.socket"
+        "virtlockd.socket"
+        "virtproxyd.socket"
+      )
+      for unit in "${modular_units[@]}"; do
+        if [[ -e "/usr/lib/systemd/system/$unit" || -e "/etc/systemd/system/$unit" ]]; then
+          run_root_cmd_soft "systemctl enable --now $unit" || true
+          enabled_any=1
+        fi
+      done
+    fi
+
+    if [[ "$enabled_any" -eq 0 ]]; then
+      warn "No known libvirt systemd unit files found; skipping service enable step."
+      record_skipped "virtualization:service-units-missing"
+    fi
   fi
 
   if confirm_action "Autostart and start default libvirt network"; then
-    if check_root_cmd "virsh net-info default"; then
-      run_root_cmd_soft "virsh net-autostart default" || true
-      if check_root_cmd "virsh net-info default | grep -qi 'Active:.*yes'"; then
+    local virsh_cmd="virsh -c qemu:///system"
+
+    if ! check_root_cmd "$virsh_cmd net-info default"; then
+      if check_root_cmd "[ -f /usr/share/libvirt/networks/default.xml ]"; then
+        run_root_cmd_soft "$virsh_cmd net-define /usr/share/libvirt/networks/default.xml" || true
+      fi
+    fi
+
+    if check_root_cmd "$virsh_cmd net-info default"; then
+      run_root_cmd_soft "$virsh_cmd net-autostart default" || true
+      if check_root_cmd "$virsh_cmd net-info default | grep -qi 'Active:.*yes'"; then
         warn "libvirt default network is already active; skipping net-start."
         record_skipped "virtualization:default-network-already-active"
       else
-        run_root_cmd_soft "virsh net-start default" || true
+        run_root_cmd_soft "$virsh_cmd net-start default" || true
       fi
     else
       warn "libvirt default network is not defined; skipping autostart/start."
