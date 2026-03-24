@@ -77,10 +77,10 @@ gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/or
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/ command '/usr/bin/flatpak run com.github.dynobo.normcap'
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/ binding '<Super>F9'
 
-# Super+ç: Runin in Kitty
+# Shift+Super+Enter: Runin in Kitty
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/ name 'runin'
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/ command 'kitty -e runin'
-gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/ binding '<Super>ccedilla'
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/ binding '<Shift><Super>Return'
 
 # Set up Super+Q to close the active window
 gsettings set org.gnome.desktop.wm.keybindings close "['<Super>q']"
@@ -110,7 +110,7 @@ echo -e "    ${WHITE}•${NC} ${BRIGHT_BLUE}Super+Enter${NC}: Kitty Terminal"
 echo -e "    ${WHITE}•${NC} ${BRIGHT_BLUE}Super+R${NC}: Btop"
 echo -e "    ${WHITE}•${NC} ${BRIGHT_BLUE}Super+B${NC}: Zen Browser"
 echo -e "    ${WHITE}•${NC} ${BRIGHT_BLUE}Super+F9${NC}: OCR (Normcap)"
-echo -e "    ${WHITE}•${NC} ${BRIGHT_BLUE}Super+ç${NC}: Runin in Kitty"
+echo -e "    ${WHITE}•${NC} ${BRIGHT_BLUE}Shift+Super+Enter${NC}: Runin in Kitty"
 echo ""
 echo -e "  ${DARK_BLUE}⚙️  System Settings:${NC}"
 echo -e "    ${WHITE}•${NC} ${BRIGHT_BLUE}Show battery percentage${NC}: Enabled"
