@@ -154,7 +154,7 @@ apply_gnome_shortcuts_from_installer() {
 
   # Shift+Super+Enter: Runin in Kitty (layout-independent)
   set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom5/" "name" "'runin'"
-  set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom5/" "command" "'kitty -e runin'"
+  set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom5/" "command" "\"kitty -e fish -ic 'runin; exec fish'\""
   set_gsettings_safe "${media_schema}.custom-keybinding:$base_path/custom5/" "binding" "'<Shift><Super>Return'"
 
   # Super+Q close window
@@ -559,6 +559,31 @@ ensure_runin_available() {
   ensure_cargo_binary_on_path "runin"
 }
 
+ensure_runin_shell_integration() {
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    log "[DRY-RUN] Would install runin fish shell integration"
+    return 0
+  fi
+
+  if ! ensure_cargo_binary_on_path "runin"; then
+    warn "runin not found; cannot install runin fish shell integration."
+    return 1
+  fi
+
+  if ! runin shell --help >/dev/null 2>&1; then
+    warn "Installed runin does not support shell integration; updating runin."
+    if ! command -v cargo >/dev/null 2>&1; then
+      warn "cargo not found; cannot update runin."
+      return 1
+    fi
+    ensure_rust_build_deps
+    run_cmd "cargo install --force runin"
+    ensure_cargo_binary_on_path "runin" || return 1
+  fi
+
+  run_cmd "runin shell install fish"
+}
+
 ensure_fd_available() {
   if command -v fd >/dev/null 2>&1; then
     return 0
@@ -691,6 +716,8 @@ module_terminal() {
   if confirm_action "Install runin (cargo install runin)"; then
     if ! ensure_runin_available; then
       record_failed "terminal:runin"
+    elif ! ensure_runin_shell_integration; then
+      record_failed "terminal:runin-shell"
     fi
   fi
 

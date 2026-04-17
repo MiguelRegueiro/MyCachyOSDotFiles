@@ -195,7 +195,7 @@ If `gnome-extensions` actions are enabled and extensions are installed, installe
 | `Super + R`       | Btop                  | `kitty -e btop` |
 | `Super + B`       | Zen Browser           | `flatpak run app.zen_browser.zen` |
 | `Super + F9`      | OCR (NormCap)         | `/usr/bin/flatpak run com.github.dynobo.normcap` |
-| `Shift + Super + Enter` | runin (smart command launcher) | `kitty -e runin` |
+| `Shift + Super + Enter` | runin (smart command launcher) | `kitty -e fish -ic 'runin; exec fish'` |
 | `Super + Q`       | Close Active Window   | Closes the currently focused window |
 | `Shift + Super + L` | Shutdown            | GNOME media-keys `shutdown` action |
 | `Shift + Super + P` | Reboot              | GNOME media-keys `reboot` action |
